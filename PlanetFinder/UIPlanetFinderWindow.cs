@@ -361,6 +361,18 @@ namespace PlanetFinderMod
             return false;
         }
 
+        public bool IsTargetPlanet(PlanetData planet, HashSet<int> filterItems, bool orSearch = false)
+        {
+            foreach (int itemId in filterItems)
+            {
+                if(IsTargetPlanet(planet, itemId) == orSearch)
+                {
+                    return orSearch;
+                }
+            }
+            return !orSearch;
+        }
+
         public bool IsTargetStar(StarData star, int itemId)
         {
             for (int j = 0; j < star.planetCount; j++)
@@ -443,18 +455,19 @@ namespace PlanetFinderMod
             {
                 targets = PLFN.recentPlanets;
             }
-            else if (scope == Scope.Planet)
-            {
-                targets = new List<PlanetData>(320);
-                for (int i = 0; i < galaxy.starCount; i++)
-                {
-                    StarData star = galaxy.stars[i];
-                    targets.AddRange(star.planets);
-                }
-            }
 
             if (filterItems.Count == 0)
             {
+                if (scope == Scope.Planet)
+                {
+                    targets = new List<PlanetData>(320);
+                    for (int i = 0; i < galaxy.starCount; i++)
+                    {
+                        StarData star = galaxy.stars[i];
+                        targets.AddRange(star.planets);
+                    }
+                }
+
                 if (targets != null)
                 {
                     foreach (var item in targets)
@@ -475,39 +488,36 @@ namespace PlanetFinderMod
             }
 
             //filter by item
-            foreach (int itemId in filterItems)
+            //foreach (int itemId in filterItems){
+            List<PlanetData> phasedTargets = new List<PlanetData>(targets != null ? targets.Count : 320);
+            if (targets != null)
             {
-                List<PlanetData> phasedTargets = new List<PlanetData>(targets != null ? targets.Count : 320);
-                if (targets != null)
+                foreach (PlanetData planet in targets)
                 {
-                    //前のループで追加されたものを更にフィルタ
-                    foreach (PlanetData planet in targets)
+                    if (IsTargetPlanet(planet, filterItems))
                     {
-                        if (IsTargetPlanet(planet, itemId))
+                        phasedTargets.Add(planet);
+                    }
+                }
+            }
+            else
+            {
+                for (int i = 0; i < galaxy.starCount; i++)
+                {
+                    StarData star = galaxy.stars[i];
+                    for (int j = 0; j < star.planetCount; j++)
+                    {
+                        PlanetData planet = star.planets[j];
+                        if (IsTargetPlanet(planet, filterItems))
                         {
                             phasedTargets.Add(planet);
                         }
                     }
                 }
-                else
-                {
-                    //初回ループ
-                    for (int i = 0; i < galaxy.starCount; i++)
-                    {
-                        StarData star = galaxy.stars[i];
-                        for (int j = 0; j < star.planetCount; j++)
-                        {
-                            PlanetData planet = star.planets[j];
-                            if (IsTargetPlanet(planet, itemId))
-                            {
-                                phasedTargets.Add(planet);
-                            }
-                        }
-                    }
-                }
-
-                targets = phasedTargets;
             }
+
+            targets = phasedTargets;
+            //}
 
             if (targets != null)
             {

@@ -1,0 +1,34 @@
+# PlanetFinder 
+
+Mod for Dyson Sphere Program. Needs BepInEx.
+
+This mod adds a window that lists the planets and allows you to search by criteria.
+
+It can be opened from the button that will be added to the panel at the bottom left of the game screen and the bottom right of the star map. It can also be opened with a shortcut (default LCtrl+F). Whether the button is shown or not, and the shortcut can be customized by clicking on the gear icon at the top of the main window.
+
+The scope of the list can be narrowed down by "all planets", "current star system", "planets where facilities are being built", and "recently visited planets". From there, you can further filter by which resources are present.  
+Resources can be multi-selected by shift-clicking, narrowing down the list of planets that have all the resources.
+
+The display area shows the name of the planet, distance from the current star system, and the actual number of selected resources (if possible) and number of chunks of veins. Clicking the arrow button displays the planet in the starmap view.
+
+
+![screen shot](https://raw.githubusercontent.com/hetima/DSP_PlanetFinder/main/screen.jpg)
+
+
+惑星を一覧表示し、条件を指定して検索できるウィンドウを追加するmodです。
+
+ゲーム画面左下のパネルと星図ビューの右下に追加されるボタンから開くことができます。ショートカットでも開くことができます(デフォルトLCtrl+F)。ボタンを表示するかどうか、ショートカットのカスタマイズはメインウィンドウ上部の歯車アイコンから変更できます。
+
+一覧表示する範囲を「すべての惑星」「現在の星系」「施設を建てている惑星」「最近訪れた惑星」で絞り込みます。そこから更にどの資源が存在するかでフィルタできます。  
+資源はシフトクリックすると複数選択することができ、すべての資源が揃った惑星を絞り込みます。
+
+検索結果表示部分には惑星の名前、現在の星系からの距離、選択した資源の実数と鉱脈の数が表示されます。矢印のボタンをクリックするとその惑星を星図ビューで表示します。
+
+
+## Release Notes
+
+
+### v0.1.0
+
+- Initial Release
+

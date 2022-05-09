@@ -122,7 +122,9 @@ namespace PlanetFinderMod
             AddElement(rect, 26f);
             rect = MyCheckBox.CreateCheckBox(PLFN.showButtonInStarmap, "Show Button In Starmap");
             AddElement(rect, 26f);
-
+            AddElement(null, 26f);
+            rect = MyCheckBox.CreateCheckBox(PLFN.showPowerState, "Show Power State In List");
+            AddElement(rect, 26f);
             x_ = 290f;
             y_ = 0f;
             

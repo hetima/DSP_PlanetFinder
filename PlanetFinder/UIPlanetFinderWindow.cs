@@ -48,6 +48,7 @@ namespace PlanetFinderMod
 
         public StringBuilder sb;
         public StringBuilder sbOil;
+        public StringBuilder sbWatt;
 
         internal bool _eventLock;
         public bool isPointEnter;
@@ -146,7 +147,7 @@ namespace PlanetFinderMod
             sb = new StringBuilder(sbFormat, sbFormat.Length + 2);
             sbFormat = "         /s";
             sbOil = new StringBuilder(sbFormat, sbFormat.Length + 2);
-
+            sbWatt = new StringBuilder("         W", 12);
 
             //config button
             Sprite sprite = null;
@@ -272,8 +273,12 @@ namespace PlanetFinderMod
 
             if (Input.GetKeyDown(KeyCode.Tab))
             {
-                targetItemId = itemSelection.NextTargetItemId(targetItemId);
-                valid = RefreshListView(planetListView);
+                int current = targetItemId;
+                targetItemId = itemSelection.NextTargetItemId(targetItemId, PLFN.showPowerState.Value);
+                if (targetItemId != current)
+                {
+                    valid = RefreshListView(planetListView);
+                }
             }
             else if (step == 0)
             {

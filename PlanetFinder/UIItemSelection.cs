@@ -285,12 +285,13 @@ namespace PlanetFinderMod
 
         }
 
-        public int NextTargetItemId(int targetItemId)
+        public int NextTargetItemId(int targetItemId, bool includesEmpty = false)
         {
-            if (items.Count <= 1)
+            if (items.Count == 0)
             {
                 return targetItemId;
             }
+
             int min = int.MaxValue;
             int max = int.MaxValue;
             foreach (var item in items)
@@ -308,6 +309,10 @@ namespace PlanetFinderMod
             if (max != int.MaxValue)
             {
                 return max;
+            }
+            else if (includesEmpty)
+            {
+                return 0;
             }
             else if (min != int.MaxValue)
             {

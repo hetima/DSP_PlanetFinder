@@ -30,7 +30,7 @@ namespace PlanetFinderMod
         public static ConfigEntry<KeyboardShortcut> mainWindowHotkey;
         public static ConfigEntry<bool> showButtonInMainPanel;
         public static ConfigEntry<bool> showButtonInStarmap;
-
+        public static ConfigEntry<bool> showPowerState;
 
 
         void Awake()
@@ -45,6 +45,8 @@ namespace PlanetFinderMod
                 "show open/close button in main panel");
             showButtonInStarmap = Config.Bind("UI", "showButtonInStarmap", true,
                 "show open/close button in starmap");
+            showPowerState = Config.Bind("UI", "showPowerState", true,
+                "show power consumption");
             harmony.PatchAll(typeof(Patch));
             harmony.PatchAll(typeof(MyWindowCtl.Patch));
             harmony.PatchAll(typeof(StarDistance.Patch));

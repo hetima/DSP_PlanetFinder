@@ -37,10 +37,7 @@ namespace PlanetFinderMod
                 _itemId = value;
                 sb = (_itemId == 7) ? window.sbOil : window.sb;
                 icon.sprite = window.itemSelection.GetIconForItemId(_itemId);
-                if (icon.sprite == null)
-                {
-                    icon.enabled = false;
-                }
+                icon.enabled = (icon.sprite != null);
             }
         }
 
@@ -107,6 +104,7 @@ namespace PlanetFinderMod
             item.valueText = src.valueText;
             item.valueText.text = "";
             item.valueText.color = item.nameText.color;
+            item.valueText.supportRichText = true;
             rect = Util.NormalizeRectWithTopLeft(item.valueText, 380f - rightPadding, 2f);
             rect.sizeDelta = new Vector2(100f, 24f);
 
@@ -275,9 +273,72 @@ namespace PlanetFinderMod
                     valueSketchText.text = "";
                 }
             }
+            else if (PLFN.showPowerState.Value && planetData.factory?.powerSystem != null)
+            {
+                valueText.text = PowerState(out int networkCount);
+                if (networkCount > 1)
+                {
+                    valueSketchText.text = "(" + networkCount.ToString() + ")";
+                }
+                else
+                {
+                    valueSketchText.text = "";
+                }
+            }
+            else
+            {
+                valueText.text = "";
+                valueSketchText.text = "";
+            }
 
             return true;
         }
+
+        public string PowerState(out int networkCount)
+        {
+            long energyCapacity = 0L;
+            long energyRequired = 0L;
+            string result = "";
+            networkCount = 0;
+            PowerSystem powerSystem = planetData.factory.powerSystem;
+            for (int i = 1; i < powerSystem.netCursor; i++)
+            {
+                PowerNetwork powerNetwork = powerSystem.netPool[i];
+                if (powerNetwork != null && powerNetwork.id == i)
+                {
+                    networkCount++;
+                    energyCapacity += powerNetwork.energyCapacity;
+                    energyRequired += powerNetwork.energyRequired;
+                }
+            }
+            if (energyCapacity > 0)
+            {
+                StringBuilderUtility.WriteKMG(window.sbWatt, 8, energyRequired * 60L, false);
+                result = window.sbWatt.ToString();
+                StringBuilderUtility.WriteKMG(window.sbWatt, 8, energyCapacity * 60L, false);
+                result += " / " + window.sbWatt.ToString().Trim();
+                double ratio = (double)energyRequired / (double)energyCapacity;
+                if (ratio > 0.9f)
+                {
+                    result += " (" + ratio.ToString("P1") +")";
+                    if (ratio > 0.99f)
+                    {
+                        result = "<color=#FF404D99>" + result + "</color>";
+                    }
+                    else
+                    {
+                        result = "<color=#DB883E85>" + result + "</color>";
+                    }
+                }
+            }
+            else
+            {
+                result = "--";
+            }
+
+            return result;
+        }
+
         public void OnPointerEnter(PointerEventData _eventData)
         {
             locateBtn.gameObject.SetActive(true);

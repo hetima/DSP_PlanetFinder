@@ -9,6 +9,7 @@ namespace PlanetFinderMod
 {
     public class UIPlanetFinderListItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
+        public UIPlanetFinderWindow window;
         public PlanetData planetData;
         public StarData starData; //null if target is planet
         public string distanceStr;
@@ -25,7 +26,25 @@ namespace PlanetFinderMod
             }
         }
 
-        public int itemId;
+        public int itemId
+                {
+            get
+            {
+                return _itemId;
+            }
+            set
+            {
+                _itemId = value;
+                sb = (_itemId == 7) ? window.sbOil : window.sb;
+                icon.sprite = window.itemSelection.GetIconForItemId(_itemId);
+                if (icon.sprite == null)
+                {
+                    icon.enabled = false;
+                }
+            }
+        }
+
+        private int _itemId;
 
         [SerializeField]
         public Text nameText;
@@ -136,21 +155,16 @@ namespace PlanetFinderMod
             }
         }
 
-        public void Init(in PlanetListData d, UIPlanetFinderWindow window)
+        public void Init(in PlanetListData d, UIPlanetFinderWindow window_)
         {
+            window = window_;
             distanceStr = d.distanceStr;
             itemId = d.itemId;
             planetData = d.planetData;
             starData = d.starData;
-            sb = (d.itemId == 7) ? window.sbOil : window.sb;
-            icon.sprite = window.itemSelection.GetIconForItemId(d.itemId);
-
             SetUpDisplayName();
 
-            if (icon.sprite == null)
-            {
-                icon.enabled = false;
-            }
+            
 
         }
 
@@ -174,19 +188,9 @@ namespace PlanetFinderMod
             }
             if (itemId <= veinCount)
             {
-                if (true/*planetData.loaded*/)
+                if (planetData.veinAmounts[itemId] > 0)
                 {
-                    if (planetData.veinAmounts[itemId] > 0)
-                    {
-                        return planetData.veinAmounts[itemId];
-                    }
-                }
-                else
-                {
-                    if (planetData.veinSpotsSketch != null && planetData.veinSpotsSketch[itemId] > 0)
-                    {
-                        return planetData.veinSpotsSketch[itemId];
-                    }
+                    return planetData.veinAmounts[itemId];
                 }
             }
 
@@ -230,43 +234,46 @@ namespace PlanetFinderMod
             {
                 return true;
             }
-            if (!GameMain.data.gameDesc.isInfiniteResource)
+            if (itemId != 0)
             {
-                long amount = TargetItemAmount();
-                if (amount > 0)
+                if (!GameMain.data.gameDesc.isInfiniteResource)
                 {
-                    if (itemId == 7)
+                    long amount = TargetItemAmount();
+                    if (amount > 0)
                     {
-                        double num3 = (double)amount * (double)VeinData.oilSpeedMultiplier;
-                        StringBuilderUtility.WritePositiveFloat(sb, 0, 8, (float)num3, 2, ' ');
-                    }
-                    else
-                    {
-                        if (amount < 1_000_000_000L)
+                        if (itemId == 7)
                         {
-                            StringBuilderUtility.WriteCommaULong(sb, 0, 16, (ulong)amount, 1, ' ');
+                            double num3 = (double)amount * (double)VeinData.oilSpeedMultiplier;
+                            StringBuilderUtility.WritePositiveFloat(sb, 0, 8, (float)num3, 2, ' ');
                         }
                         else
                         {
-                            StringBuilderUtility.WriteKMG(sb, 15, amount, false);
+                            if (amount < 1_000_000_000L)
+                            {
+                                StringBuilderUtility.WriteCommaULong(sb, 0, 16, (ulong)amount, 1, ' ');
+                            }
+                            else
+                            {
+                                StringBuilderUtility.WriteKMG(sb, 15, amount, false);
+                            }
                         }
+                        valueText.text = sb.ToString();
                     }
-                    valueText.text = sb.ToString();
+                    else
+                    {
+                        valueText.text = "";
+                    }
+                }
+
+                int amountSketch = TargetItemAmountSketch();
+                if (amountSketch > 0)
+                {
+                    valueSketchText.text = "(" + amountSketch.ToString() + ")";
                 }
                 else
                 {
-                    valueText.text = "";
+                    valueSketchText.text = "";
                 }
-            }
-
-            int amountSketch = TargetItemAmountSketch();
-            if (amountSketch > 0)
-            {
-                valueSketchText.text = "(" + amountSketch.ToString() + ")";
-            }
-            else
-            {
-                valueSketchText.text = "";
             }
 
             return true;

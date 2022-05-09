@@ -39,6 +39,7 @@ namespace PlanetFinderMod
 
         public Scope scope;
         public List<UIButton> scopeButtons;
+        public int targetItemId;
 
         public UIItemSelection itemSelection;
         public UIListView planetListView;
@@ -268,7 +269,13 @@ namespace PlanetFinderMod
 
             bool valid = true;
             int step = Time.frameCount % 30;
-            if (step == 0)
+
+            if (Input.GetKeyDown(KeyCode.Tab))
+            {
+                targetItemId = itemSelection.NextTargetItemId(targetItemId);
+                valid = RefreshListView(planetListView);
+            }
+            else if (step == 0)
             {
                 valid = RefreshListView(planetListView);
                 //UIListViewのStart()で設定されるのでその後に呼ぶ必要がある
@@ -318,6 +325,7 @@ namespace PlanetFinderMod
             _eventLock = true;
             _planetList.Clear();
             planetListView.Clear();
+            targetItemId = itemSelection.lastSelectedItemId;
 
             SetUpItemList();
             _planetList.Sort((a, b) => a.distanceForSort - b.distanceForSort);
@@ -332,7 +340,7 @@ namespace PlanetFinderMod
         }
 
 
-        public static int veinCount = 15;
+        public const int veinCount = 15;
         public bool IsTargetPlanet(PlanetData planet, int itemId)
         {
             if (planet.type == EPlanetType.Gas)
@@ -589,7 +597,7 @@ namespace PlanetFinderMod
                 distanceForSort = sortIndex;
             }
 
-            int targetItemId = itemSelection.lastSelectedItemId;
+            //int targetItemId = itemSelection.lastSelectedItemId;
 
             PlanetListData d = new PlanetListData()
             {
@@ -644,6 +652,10 @@ namespace PlanetFinderMod
                 {
                     float itemPos = ((RectTransform)data.transform).localPosition.y;
                     bool shown = itemPos <= top && itemPos > bottom;
+                    if (targetItemId != e.itemId)
+                    {
+                        e.itemId = targetItemId;
+                    }
                     if (onlyNewlyEmerged && !shown)
                     {
                         continue;

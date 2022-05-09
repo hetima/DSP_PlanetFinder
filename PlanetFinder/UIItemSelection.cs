@@ -285,5 +285,37 @@ namespace PlanetFinderMod
 
         }
 
+        public int NextTargetItemId(int targetItemId)
+        {
+            if (items.Count <= 1)
+            {
+                return targetItemId;
+            }
+            int min = int.MaxValue;
+            int max = int.MaxValue;
+            foreach (var item in items)
+            {
+                if (targetItemId >= item && min > item)
+                {
+                    min = item;
+                }
+                if (targetItemId < item && max > item)
+                {
+                    max = item;
+                }
+            }
+
+            if (max != int.MaxValue)
+            {
+                return max;
+            }
+            else if (min != int.MaxValue)
+            {
+                return min;
+            }
+
+            return targetItemId;
+        }
+
     }
 }

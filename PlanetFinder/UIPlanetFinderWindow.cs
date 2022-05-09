@@ -176,6 +176,18 @@ namespace PlanetFinderMod
             _eventLock = false;
         }
 
+        private void OnScrollRectChanged(Vector2 val)
+        {
+            if (planetListView.m_ScrollRect.verticalScrollbar.size < 0.1f)
+            {
+                planetListView.m_ScrollRect.verticalScrollbar.size = 0.1f;
+            }
+            else if (planetListView.m_ScrollRect.verticalScrollbar.size >= 0.99f)
+            {
+                planetListView.m_ScrollRect.verticalScrollbar.size = 0.001f;
+            }
+        }
+
         private void OnScopeButtonClick(int obj)
         {
 
@@ -215,6 +227,7 @@ namespace PlanetFinderMod
             {
                 btn.onClick += OnScopeButtonClick;
             }
+            planetListView.m_ScrollRect.onValueChanged.AddListener(OnScrollRectChanged);
         }
         protected override void _OnUnregEvent()
         {
@@ -222,6 +235,7 @@ namespace PlanetFinderMod
             {
                 btn.onClick -= OnScopeButtonClick;
             }
+            planetListView.m_ScrollRect.onValueChanged.RemoveListener(OnScrollRectChanged);
         }
 
         protected override void _OnOpen()

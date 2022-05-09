@@ -245,6 +245,13 @@ namespace PlanetFinderMod
             result.CullOutsideItems = false;
             result.ColumnSpacing = 0;
             result.RowSpacing = 4;
+
+            Image barBg = result.m_ScrollRect.verticalScrollbar.GetComponent<Image>();
+            if (barBg != null)
+            {
+                barBg.color = new Color(0f, 0f, 0f, 0.62f);
+            }
+
             //あんまり上手くはないけどとりあえず変わる
             RectTransform vsRect = result.m_ScrollRect.verticalScrollbar.transform as RectTransform;
             vsRect.sizeDelta = new Vector2(vsWidth, vsRect.sizeDelta.y);

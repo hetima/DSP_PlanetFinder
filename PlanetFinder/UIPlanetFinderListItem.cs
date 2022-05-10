@@ -36,8 +36,8 @@ namespace PlanetFinderMod
             {
                 _itemId = value;
                 sb = (_itemId == 7) ? window.sbOil : window.sb;
-                icon.sprite = window.itemSelection.GetIconForItemId(_itemId);
-                icon.enabled = (icon.sprite != null);
+                veinIcon.sprite = window.itemSelection.GetIconForItemId(_itemId);
+                veinIcon.enabled = (veinIcon.sprite != null);
             }
         }
 
@@ -53,7 +53,7 @@ namespace PlanetFinderMod
         public Text valueSketchText;
 
         [SerializeField]
-        public Image icon;
+        public Image veinIcon;
 
         [SerializeField]
         public Sprite iconHide;
@@ -115,9 +115,9 @@ namespace PlanetFinderMod
             rect.sizeDelta = new Vector2(24f, 24f);
 
 
-            item.icon = src.iconImage;
-            rect = Util.NormalizeRectWithTopLeft(item.icon, 482f - rightPadding, 2f);
-            item.icon.enabled = true;
+            item.veinIcon = src.iconImage;
+            rect = Util.NormalizeRectWithTopLeft(item.veinIcon, 482f - rightPadding, 2f);
+            item.veinIcon.enabled = true;
 
             item.iconHide = src.iconHide;
             item.iconButton = src.iconButton;

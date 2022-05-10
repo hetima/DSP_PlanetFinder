@@ -79,6 +79,7 @@ namespace PlanetFinderMod
             src.gameObject.SetActive(true);
 
             float rightPadding = 0f;
+            float leftPadding = 0f;
 
             //locate button
             UIButton btn = Util.MakeIconButtonB(Util.astroIndicatorIcon, 22);
@@ -95,28 +96,30 @@ namespace PlanetFinderMod
                 item.locateBtn = btn;
             }
 
-
+            //nameText
             item.nameText = src.labelText;
             item.nameText.text = "";
             item.nameText.fontSize = 16;
+            item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f);
 
-            item.nameText.rectTransform.anchoredPosition = new Vector2(8f, 0f);
+            //valueText
             item.valueText = src.valueText;
             item.valueText.text = "";
             item.valueText.color = item.nameText.color;
             item.valueText.supportRichText = true;
-            rect = Util.NormalizeRectWithTopLeft(item.valueText, 380f - rightPadding, 2f);
+            rect = Util.NormalizeRectWithTopLeft(item.valueText, 380f - rightPadding - leftPadding, 2f);
             rect.sizeDelta = new Vector2(100f, 24f);
 
+            //valueSketchText
             item.valueSketchText = GameObject.Instantiate<Text>(item.valueText, item.valueText.transform.parent);
             item.valueSketchText.gameObject.name = "valueSketchText";
             item.valueSketchText.alignment = TextAnchor.UpperLeft;
-            rect = Util.NormalizeRectWithTopLeft(item.valueSketchText, 504f - rightPadding, 2f);
+            rect = Util.NormalizeRectWithTopLeft(item.valueSketchText, 504f - rightPadding - leftPadding, 2f);
             rect.sizeDelta = new Vector2(24f, 24f);
 
-
+            //veinIcon
             item.veinIcon = src.iconImage;
-            rect = Util.NormalizeRectWithTopLeft(item.veinIcon, 482f - rightPadding, 2f);
+            rect = Util.NormalizeRectWithTopLeft(item.veinIcon, 482f - rightPadding - leftPadding, 2f);
             item.veinIcon.enabled = true;
 
             item.iconHide = src.iconHide;

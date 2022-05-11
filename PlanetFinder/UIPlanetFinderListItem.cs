@@ -9,10 +9,12 @@ namespace PlanetFinderMod
 {
     public class UIPlanetFinderListItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
+        public static Sprite circleSprite;
         public UIPlanetFinderWindow window;
         public PlanetData planetData;
         public StarData starData; //null if target is planet
         public string distanceStr;
+        public Color planetColor;
 
         public string planetName
         {
@@ -53,6 +55,9 @@ namespace PlanetFinderMod
         public Text valueSketchText;
 
         [SerializeField]
+        public Image labelIcon;
+
+        [SerializeField]
         public Image veinIcon;
 
         [SerializeField]
@@ -79,7 +84,7 @@ namespace PlanetFinderMod
             src.gameObject.SetActive(true);
 
             float rightPadding = 0f;
-            float leftPadding = 0f;
+            float leftPadding = 22f;
 
             //locate button
             UIButton btn = Util.MakeIconButtonB(Util.astroIndicatorIcon, 22);
@@ -119,16 +124,28 @@ namespace PlanetFinderMod
 
             //veinIcon
             item.veinIcon = src.iconImage;
-            rect = Util.NormalizeRectWithTopLeft(item.veinIcon, 482f - rightPadding - leftPadding, 2f);
-            item.veinIcon.enabled = true;
+            if (item.veinIcon != null)
+            {
+                rect = Util.NormalizeRectWithTopLeft(item.veinIcon, 482f - rightPadding - leftPadding, 2f);
+                item.veinIcon.enabled = true;
+
+                //labelIcon
+                item.labelIcon = GameObject.Instantiate<Image>(item.veinIcon, baseTrans);
+                item.labelIcon.gameObject.name = "labelIcon";
+                rect = Util.NormalizeRectWithTopLeft(item.labelIcon, 16f, 12f);
+                rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.localScale = new Vector3(0.35f, 0.35f, 1f);
+
+                UIStationWindow stationWindow = UIRoot.instance.uiGame.stationWindow;
+                circleSprite = stationWindow.storageUIPrefab.transform.Find("storage-icon-empty/white")?.GetComponent<Image>()?.sprite;
+                item.labelIcon.sprite = circleSprite;
+            }
 
             item.iconHide = src.iconHide;
             item.iconButton = src.iconButton;
             item.gameObject.SetActive(true);
             //GameObject.Destroy(src.valueText.gameObject);
             GameObject.Destroy(src);
-
-
 
             return item;
         }
@@ -156,6 +173,34 @@ namespace PlanetFinderMod
             }
         }
 
+        public void SetUpPlanetColor()
+        {
+            ThemeProto themeProto = LDB.themes.Select(planetData.theme);
+            if (themeProto != null && themeProto.thumbMat != null)
+            {
+                Material mat = themeProto.thumbMat[planetData.style % themeProto.thumbMat.Length];
+                Color c = mat.GetColor("_Color");
+                if (c != null)
+                {
+                    float shine = Mathf.Max(new float[]{ c.r, c.g, c.b});
+                    if (c.a < 0.3f)
+                    {
+                        c.a += 0.3f;
+                    }
+                    if (shine > 0.45f)
+                    {
+                        c.a = 1.45f - shine;
+                    }
+                    c.a /= 2f;
+                    planetColor = c;
+                }
+                else
+                {
+                    planetColor = new Color(1f, 1f, 1f, 0.3f);
+                }
+            }
+        }
+
         public void Init(in PlanetListData d, UIPlanetFinderWindow window_)
         {
             window = window_;
@@ -164,9 +209,8 @@ namespace PlanetFinderMod
             planetData = d.planetData;
             starData = d.starData;
             SetUpDisplayName();
-
-            
-
+            SetUpPlanetColor();
+            labelIcon.color = planetColor;
         }
 
         private void OnLocateButtonClick(int obj)

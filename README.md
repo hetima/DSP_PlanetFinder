@@ -31,6 +31,7 @@ Clicking the arrow button displays the planet in the starmap view.
 
 ### v
 - Added Show Power State In List (pressing Tab key to switch between resource info and power state) (on/off in ConfigWindow)
+- Added integration with [DSPStarMapMemo](https://dsp.thunderstore.io/package/appuns/DSPStarMapMemo/) mod. Display icons set by DSPStarMapMemo if it's installed (on/off in ConfigWindow)
 
 ### v0.1.0
 

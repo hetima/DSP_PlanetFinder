@@ -136,6 +136,7 @@ namespace PlanetFinderMod
                 rect.pivot = new Vector2(0.5f, 0.5f);
                 rect.localScale = new Vector3(0.35f, 0.35f, 1f);
 
+                item.labelIcon.material = null; //これのせいでめっちゃ光る
                 UIStationWindow stationWindow = UIRoot.instance.uiGame.stationWindow;
                 circleSprite = stationWindow.storageUIPrefab.transform.Find("storage-icon-empty/white")?.GetComponent<Image>()?.sprite;
                 item.labelIcon.sprite = circleSprite;
@@ -182,21 +183,21 @@ namespace PlanetFinderMod
                 Color c = mat.GetColor("_Color");
                 if (c != null)
                 {
+                    if (c.a < 0.5f)
+                    {
+                        c.a = 0.5f;
+                    }
                     float shine = Mathf.Max(new float[]{ c.r, c.g, c.b});
-                    if (c.a < 0.3f)
+                    if (shine > 0.6f)
                     {
-                        c.a += 0.3f;
+                        c.a = 1.6f - shine;
                     }
-                    if (shine > 0.45f)
-                    {
-                        c.a = 1.45f - shine;
-                    }
-                    c.a /= 2f;
+                    c.a /= 1.4f;
                     planetColor = c;
                 }
                 else
                 {
-                    planetColor = new Color(1f, 1f, 1f, 0.3f);
+                    planetColor = new Color(1f, 1f, 1f, 0.6f);
                 }
             }
         }
@@ -211,6 +212,17 @@ namespace PlanetFinderMod
             SetUpDisplayName();
             SetUpPlanetColor();
             labelIcon.color = planetColor;
+
+            if (PLFN.aDSPStarMapMemoIntg.canGetSignalIconId)
+            {
+                int sign = PLFN.aDSPStarMapMemoIntg.GetSignalIconId(planetData.id);
+                if (sign != 0)
+                {
+                    labelIcon.sprite = LDB.signals.IconSprite(sign);
+                    labelIcon.rectTransform.localScale = Vector3.one;
+                    labelIcon.color = Color.white;
+                }
+            }
         }
 
         private void OnLocateButtonClick(int obj)

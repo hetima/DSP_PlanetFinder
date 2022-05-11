@@ -32,6 +32,9 @@ namespace PlanetFinderMod
         public static ConfigEntry<bool> showButtonInStarmap;
         public static ConfigEntry<bool> showPowerState;
 
+        public static ConfigEntry<bool> integrationWithDSPStarMapMemo;
+        
+
 
         void Awake()
         {
@@ -47,6 +50,10 @@ namespace PlanetFinderMod
                 "show open/close button in starmap");
             showPowerState = Config.Bind("UI", "showPowerState", true,
                 "show power consumption");
+
+            integrationWithDSPStarMapMemo = Config.Bind("Integration", "integrationWithDSPStarMapMemo", false,
+                "Display icons set by DSPStarMapMemo");
+
             harmony.PatchAll(typeof(Patch));
             harmony.PatchAll(typeof(MyWindowCtl.Patch));
             harmony.PatchAll(typeof(StarDistance.Patch));
@@ -253,12 +260,13 @@ namespace PlanetFinderMod
                 if (!_initialized)
                 {
                     _initialized = true;
+                    aLSTMIntg = new LSTMIntg();
+                    aDSPStarMapMemoIntg = new DSPStarMapMemoIntg();
+
                     planetFinder = UIPlanetFinderWindow.CreateInstance();
                     _configWin = UIConfigWindow.CreateWindow();
                     recentPlanets = new List<PlanetData>(100);
 
-                    aLSTMIntg = new LSTMIntg();
-                    aDSPStarMapMemoIntg = new DSPStarMapMemoIntg();
                     CreateUI();
                 }
             }
@@ -360,11 +368,10 @@ namespace PlanetFinderMod
                     return 0;
                 }
                 object[] arg = new object[] { planetId, null };
-                d.GetType().InvokeMember("TryGetValue", BindingFlags.InvokeMethod, null, d, arg);
-                if (arg.Length == 2 && arg[1] != null)
+                bool flag = (bool)d.GetType().InvokeMember("TryGetValue", BindingFlags.InvokeMethod, null, d, arg);
+                if (flag && arg.Length == 2 && arg[1] != null)
                 {
-                    object value = arg[1];
-                    object signalIconIdObj = _signalIconIdField.GetValue(value);
+                    object signalIconIdObj = _signalIconIdField.GetValue(arg[1]);
                     if (signalIconIdObj != null)
                     {
                         int[] signalIconId = signalIconIdObj as int[];

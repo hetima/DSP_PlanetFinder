@@ -127,7 +127,19 @@ namespace PlanetFinderMod
             AddElement(rect, 26f);
             x_ = 290f;
             y_ = 0f;
-            
+
+
+            if (PLFN.aDSPStarMapMemoIntg.canGetSignalIconId)
+            {
+                rect = MyCheckBox.CreateCheckBox(PLFN.integrationWithDSPStarMapMemo, "Integration With DSPStarMapMemo");
+                AddElement(rect, 22f);
+                x_ += 32f;
+                Text txt = CreateText("Display Icons Set By DSPStarMapMemo");
+                txt.fontSize = 14;
+                AddElement(txt.rectTransform, 24f);
+                x_ -= 32f;
+
+            }
 
 
             //Traffic Logic tab

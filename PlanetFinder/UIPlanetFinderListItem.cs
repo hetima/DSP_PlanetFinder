@@ -134,7 +134,8 @@ namespace PlanetFinderMod
                 item.labelIcon.gameObject.name = "labelIcon";
                 rect = Util.NormalizeRectWithTopLeft(item.labelIcon, 16f, 12f);
                 rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.localScale = new Vector3(0.35f, 0.35f, 1f);
+                rect.sizeDelta = new Vector2(24f, 24f);
+                rect.localScale = new Vector3(0.3f, 0.3f, 1f);
 
                 item.labelIcon.material = null; //これのせいでめっちゃ光る
                 UIStationWindow stationWindow = UIRoot.instance.uiGame.stationWindow;
@@ -213,7 +214,7 @@ namespace PlanetFinderMod
             SetUpPlanetColor();
             labelIcon.color = planetColor;
 
-            if (PLFN.aDSPStarMapMemoIntg.canGetSignalIconId)
+            if (PLFN.aDSPStarMapMemoIntg.canGetSignalIconId && PLFN.integrationWithDSPStarMapMemo.Value)
             {
                 int sign = PLFN.aDSPStarMapMemoIntg.GetSignalIconId(planetData.id);
                 if (sign != 0)

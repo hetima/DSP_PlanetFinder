@@ -9,7 +9,7 @@ It can be opened from the button that will be added to the panel at the bottom l
 The scope of the list can be narrowed down by "all planets", "current star system", "planets where facilities are being built", and "recently visited planets". From there, you can further filter by which resources are present.  
 Resources can be multi-selected by shift-clicking, narrowing down the list of planets that have all the resources.
 
-The display area shows the name of the planet, distance from the current star system, and the actual number of selected resources (if possible) and approximate number of chunks of veins. The power status can also be displayed and switched to resource information by pressing the Tab key.  
+The display area shows the name of the planet, distance from the current star system, and the actual number of selected resources (if possible) and approximate number of chunks of veins. The power status can also be displayed and switched to resource information by pressing the Tab key. If the electricity supply-demand ratio exceeds 90%, an orange display warns.  
 Clicking the arrow button displays the planet in the starmap view.
 
 
@@ -23,13 +23,13 @@ Clicking the arrow button displays the planet in the starmap view.
 一覧表示する範囲を「すべての惑星」「現在の星系」「施設を建てている惑星」「最近訪れた惑星」で絞り込みます。そこから更にどの資源が存在するかでフィルタできます。  
 資源はシフトクリックすると複数選択することができ、すべての資源が揃った惑星を絞り込みます。
 
-検索結果表示部分には惑星の名前、現在の星系からの距離、選択した資源の実数とおおまかな鉱脈の数が表示されます。電力の状態も表示でき、Tabキーを押すことで資源の情報と切り替わります。  
+検索結果表示部分には惑星の名前、現在の星系からの距離、選択した資源の実数とおおまかな鉱脈の数が表示されます。電力の状態も表示でき、Tabキーを押すことで資源の情報と切り替わります。電力需給率が90%を超えていたらオレンジ色の表示で警告します。  
 矢印のボタンをクリックするとその惑星を星図ビューで表示します。
 
 
 ## Release Notes
 
-### v
+### v0.2.0
 - Added Show Power State In List (pressing Tab key to switch between resource info and power state) (on/off in ConfigWindow)
 - Added integration with [DSPStarMapMemo](https://dsp.thunderstore.io/package/appuns/DSPStarMapMemo/) mod. Display icons set by DSPStarMapMemo if it's installed (on/off in ConfigWindow)
 

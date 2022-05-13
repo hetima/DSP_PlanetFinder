@@ -256,7 +256,14 @@ namespace PlanetFinderMod
             if (VFInput.escape && !UIRoot.instance.uiGame.starmap.active && !VFInput.inputing)
             {
                 VFInput.UseEscape();
-                base._Close();
+                if (PLFN._configWin.active)
+                {
+                    PLFN._configWin._Close();
+                }
+                else
+                {
+                    base._Close();
+                }
             }
             if (_eventLock)
             {

@@ -105,6 +105,7 @@ namespace PlanetFinderMod
                 (txt_.transform as RectTransform).sizeDelta = new Vector2(txt_.preferredWidth + 40f, 30f);
                 return txt_;
             }
+            Text txt;
 
             //General tab
             tab1 = AddTab("General", out tabBtn1);
@@ -123,6 +124,12 @@ namespace PlanetFinderMod
             rect = MyCheckBox.CreateCheckBox(PLFN.showButtonInStarmap, "Show Button In Starmap");
             AddElement(rect, 26f);
             AddElement(null, 26f);
+
+            txt = CreateText("Window Size");
+            AddElement(txt.transform as RectTransform, 32f);
+            rect = MySlider.CreateSlider(PLFN.mainWindowSize, 4f, 12f, "0", 200f);
+            AddElement(rect, 26f);
+
             rect = MyCheckBox.CreateCheckBox(PLFN.showPowerState, "Show Power State In List");
             AddElement(rect, 26f);
             x_ = 290f;
@@ -134,7 +141,7 @@ namespace PlanetFinderMod
                 rect = MyCheckBox.CreateCheckBox(PLFN.integrationWithDSPStarMapMemo, "Integration With DSPStarMapMemo");
                 AddElement(rect, 22f);
                 x_ += 32f;
-                Text txt = CreateText("Display Icons Set By DSPStarMapMemo");
+                txt = CreateText("Display Icons Set By DSPStarMapMemo");
                 txt.fontSize = 14;
                 AddElement(txt.rectTransform, 24f);
                 x_ -= 32f;

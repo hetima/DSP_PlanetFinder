@@ -74,11 +74,25 @@ namespace PlanetFinderMod
             return false;
         }
 
+        public Vector2 WindowSize()
+        {
+            float rows = Mathf.Round(PLFN.mainWindowSize.Value);
+            if (rows < 4f)
+            {
+                rows = 4f;
+            }
+            if (rows > 16f)
+            {
+                rows = 16f;
+            }
+            return new Vector2(640, 174 + 28 * rows);
+        }
+
         protected override void _OnCreate()
         {
             _eventLock = true;
             windowTrans = MyWindowCtl.GetRectTransform(this);
-            windowTrans.sizeDelta = new Vector2(640, 480);
+            windowTrans.sizeDelta = WindowSize();
 
             GameObject go = new GameObject("content");
             contentTrans = go.AddComponent<RectTransform>();
@@ -214,8 +228,10 @@ namespace PlanetFinderMod
 
         protected override bool _OnInit()
         {
-            windowTrans.anchoredPosition = new Vector2(370, -200);
-
+            windowTrans.anchoredPosition = new Vector2(370f, -446f + (windowTrans.sizeDelta.y / 2)); // pivot=0.5 なので /2
+            PLFN.mainWindowSize.SettingChanged += (sender, args) => {
+                windowTrans.sizeDelta = WindowSize();
+            };
             return true;
         }
 

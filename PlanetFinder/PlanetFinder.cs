@@ -28,6 +28,7 @@ namespace PlanetFinderMod
         public static ConfigEntry<bool> showButtonInMainPanel;
         public static ConfigEntry<bool> showButtonInStarmap;
         public static ConfigEntry<bool> showPowerState;
+        public static ConfigEntry<float> mainWindowSize;
 
         public static ConfigEntry<bool> integrationWithDSPStarMapMemo;
         
@@ -47,6 +48,8 @@ namespace PlanetFinderMod
                 "show open/close button in starmap");
             showPowerState = Config.Bind("UI", "showPowerState", true,
                 "show power consumption");
+            mainWindowSize = Config.Bind("UI", "mainWindowSize", 8f,
+                "Main window row size (4-16)");
 
             integrationWithDSPStarMapMemo = Config.Bind("Integration", "integrationWithDSPStarMapMemo", false,
                 "Display icons set by DSPStarMapMemo");

@@ -171,11 +171,15 @@ namespace PlanetFinderMod
                 {
                     if (planetData.type == EPlanetType.Gas)
                     {
-                        prefix += PLFN.gasGiantPrefix.Value + " ";
+                        prefix += PLFN.gasGiantPrefix.Value;
                     }
                     if ((planetData.singularity & EPlanetSingularity.TidalLocked) != EPlanetSingularity.None)
                     {
-                        prefix += PLFN.tidalLockedPrefix.Value + " ";
+                        prefix += PLFN.tidalLockedPrefix.Value;
+                    }
+                    if (!string.IsNullOrEmpty(prefix))
+                    {
+                        prefix += " ";
                     }
                 }
                 planetName = prefix + planetData.displayName + distanceStr;

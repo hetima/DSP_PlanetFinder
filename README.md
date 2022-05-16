@@ -29,8 +29,8 @@ Clicking the arrow button displays the planet in the starmap view.
 
 ## Release Notes
 
-### v
-- Added show prefix label ([GAS] and [T(idal)L(ocked)]) setting in ConfigWindow (to customize the label string, edit the configuration file `gasGiantPrefix` and `tidalLockedPrefix`)
+### v0.3.0
+- Added show prefix label ([GAS] and [TL] (TidalLocked)) setting in ConfigWindow (to customize the label, edit the configuration file `gasGiantPrefix` and `tidalLockedPrefix` as string)
 - Added window size setting in ConfigWindow
 
 ### v0.2.0

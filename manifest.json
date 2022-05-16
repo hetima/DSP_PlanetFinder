@@ -1,7 +1,7 @@
 {
     "name": "PlanetFinder",
     "description": "Provides a window to search for planets",
-    "version_number": "0.2.0",
+    "version_number": "0.3.0",
     "dependencies": [],
     "website_url": "https://github.com/hetima/DSP_PlanetFinder"
 }

@@ -166,12 +166,19 @@ namespace PlanetFinderMod
             }
             else
             {
-                string gas = "";
-                if (planetData.type == EPlanetType.Gas)
+                string prefix = "";
+                if (PLFN.showPrefix.Value)
                 {
-                    gas = "[GAS] ";
+                    if (planetData.type == EPlanetType.Gas)
+                    {
+                        prefix += PLFN.gasGiantPrefix.Value + " ";
+                    }
+                    if ((planetData.singularity & EPlanetSingularity.TidalLocked) != EPlanetSingularity.None)
+                    {
+                        prefix += PLFN.tidalLockedPrefix.Value + " ";
+                    }
                 }
-                planetName = gas + planetData.displayName + distanceStr;
+                planetName = prefix + planetData.displayName + distanceStr;
             }
         }
 

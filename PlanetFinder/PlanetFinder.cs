@@ -28,6 +28,9 @@ namespace PlanetFinderMod
         public static ConfigEntry<bool> showButtonInMainPanel;
         public static ConfigEntry<bool> showButtonInStarmap;
         public static ConfigEntry<bool> showPowerState;
+        public static ConfigEntry<bool> showPrefix;
+        public static ConfigEntry<string> gasGiantPrefix;
+        public static ConfigEntry<string> tidalLockedPrefix;
         public static ConfigEntry<float> mainWindowSize;
 
         public static ConfigEntry<bool> integrationWithDSPStarMapMemo;
@@ -48,6 +51,12 @@ namespace PlanetFinderMod
                 "show open/close button in starmap");
             showPowerState = Config.Bind("UI", "showPowerState", true,
                 "show power consumption");
+            showPrefix = Config.Bind("UI", "showPrefix", true,
+                "show prefix [GAS] and [TL]");
+            gasGiantPrefix = Config.Bind("UI", "gasGiantPrefix", "[GAS]",
+                "gas giant prefix default is [GAS]");
+            tidalLockedPrefix = Config.Bind("UI", "tidalLockedPrefix", "[TL]",
+                "tidal locked prefix default is [TL]");
             mainWindowSize = Config.Bind("UI", "mainWindowSize", 8f,
                 "Main window row size (4-16)");
 

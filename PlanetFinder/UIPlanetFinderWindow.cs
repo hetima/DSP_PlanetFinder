@@ -189,6 +189,9 @@ namespace PlanetFinderMod
                 configBtn.transitions[0].pressedColor = new Color(1f, 1f, 1f, 0.5f);
             }
 
+            //menu
+            CreateMenuBox();
+
             _eventLock = false;
         }
 
@@ -232,6 +235,7 @@ namespace PlanetFinderMod
             PLFN.mainWindowSize.SettingChanged += (sender, args) => {
                 windowTrans.sizeDelta = WindowSize();
             };
+            menuTarget = null;
             return true;
         }
 
@@ -276,6 +280,10 @@ namespace PlanetFinderMod
                 {
                     PLFN._configWin._Close();
                 }
+                else if (menuComboBox.isDroppedDown)
+                {
+                    menuComboBox.isDroppedDown = false;
+                }
                 else
                 {
                     base._Close();
@@ -316,6 +324,12 @@ namespace PlanetFinderMod
             if (!valid)
             {
                 SetUpData();
+            }
+
+            if (!menuComboBox.isDroppedDown && menuTarget != null)
+            {
+                menuTarget.UnlockAppearance();
+                menuTarget = null;
             }
         }
 
@@ -696,5 +710,124 @@ namespace PlanetFinderMod
             }
             return true;
         }
+
+        //menu
+
+        public UIComboBox menuComboBox;
+        UIPlanetFinderListItem menuTarget;
+        public enum EMenuCommand
+        {
+            OpenStarmap = 0,
+        }
+
+        public void ShowMenu(UIPlanetFinderListItem item)
+        {
+            if (menuComboBox.isDroppedDown)
+            {
+                menuComboBox.isDroppedDown = false;
+                return;
+            }
+
+            RectTransform rect = menuComboBox.m_DropDownList;
+            //anchorMax = new Vector2(1f, 0f);
+            //anchorMin = new Vector2(0f, 0f);
+            //pivot = new Vector2(0f, 1f);
+
+            UIRoot.ScreenPointIntoRect(Input.mousePosition, rect.parent as RectTransform, out Vector2 pos);
+            pos.x = pos.x + 20f;
+            pos.y = pos.y + 30f;
+            menuComboBox.m_DropDownList.anchoredPosition = pos;
+
+            menuTarget = item;
+            menuTarget.LockAppearance();
+            menuComboBox.OnPopButtonClick();
+        }
+
+        internal void RefreshMenuBox()
+        {
+            List<string> items = menuComboBox.Items;
+            List<int> itemsData = menuComboBox.ItemsData;
+            items.Clear();
+            itemsData.Clear();
+            int itemCount = 1;
+            items.Add("Show In Starmap");
+            itemsData.Add((int)EMenuCommand.OpenStarmap);
+
+            menuComboBox.DropDownCount = itemCount;
+
+        }
+
+
+        public void OnMenuBoxItemIndexChange()
+        {
+            if (_eventLock)
+            {
+                return;
+            }
+            int num = menuComboBox.itemIndex;
+            if (num < 0) //recursion
+            {
+                return;
+            }
+            if (menuTarget != null)
+            {
+                EMenuCommand itemData = (EMenuCommand)menuComboBox.ItemsData[num];
+                switch (itemData)
+                {
+                    case EMenuCommand.OpenStarmap:
+                        PLFN.LocatePlanet(menuTarget.planetData?.id ?? 0);
+                        break;
+                    default:
+                        break;
+                }
+
+                menuTarget.UnlockAppearance();
+                menuTarget = null;
+            }
+
+
+            //UIRealtimeTip.Popup("" + itemData, false, 0);
+            menuComboBox.itemIndex = -1; //recursion
+        }
+
+        internal void CreateMenuBox()
+        {
+            // Main Button : Image,Button
+            // -Pop sign : Image
+            // -Text : Text
+            // Dropdown List ScrollBox : ScrollRect
+
+            UIStatisticsWindow statisticsWindow = UIRoot.instance.uiGame.statWindow;
+            UIComboBox src = statisticsWindow.productAstroBox;
+            UIComboBox box = GameObject.Instantiate<UIComboBox>(src, windowTrans);
+            box.gameObject.name = "menu-box";
+
+            RectTransform boxRect = Util.NormalizeRectWithTopLeft(box, 20f, 20f, windowTrans);
+
+            RectTransform btnRect = box.transform.Find("Main Button")?.transform as RectTransform;
+            if (btnRect != null)
+            {
+                btnRect.pivot = new Vector2(1f, 0f);
+                btnRect.anchorMax = Vector2.zero;
+                btnRect.anchorMin = Vector2.zero;
+                btnRect.anchoredPosition = new Vector2(boxRect.sizeDelta.x, 0f);
+                btnRect.sizeDelta = new Vector2(20, boxRect.sizeDelta.y);
+
+                Button btn = btnRect.GetComponent<Button>();
+                btnRect.Find("Text")?.gameObject.SetActive(false);
+                btnRect.gameObject.SetActive(false);
+            }
+
+            box.onItemIndexChange.AddListener(OnMenuBoxItemIndexChange);
+            menuComboBox = box;
+
+            //Dropdown List ScrollBox
+            RectTransform vsRect = menuComboBox.m_Scrollbar.transform as RectTransform;
+            vsRect.sizeDelta = new Vector2(0, vsRect.sizeDelta.y);
+
+            RefreshMenuBox();
+
+        }
+
     }
 }

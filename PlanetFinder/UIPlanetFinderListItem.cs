@@ -422,7 +422,7 @@ namespace PlanetFinderMod
         {
             if (eventData.button == PointerEventData.InputButton.Right)
             {
-                //UIRealtimeTip.Popup("right click:" + planetData.id, false, 0);
+                window.ShowMenu(this);
             }
         }
 
@@ -434,6 +434,24 @@ namespace PlanetFinderMod
         public void OnPointerExit(PointerEventData _eventData)
         {
             locateBtn.gameObject.SetActive(false);
+        }
+
+        public void LockAppearance()
+        {
+            Button b = GetComponent<Button>();
+            if (b != null)
+            {
+                b.enabled = false;
+            }
+        }
+
+        public void UnlockAppearance()
+        {
+            Button b = GetComponent<Button>();
+            if (b != null)
+            {
+                b.enabled = true;
+            }
         }
     }
 }

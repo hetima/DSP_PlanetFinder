@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 namespace PlanetFinderMod
 {
-    public class UIPlanetFinderListItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    public class UIPlanetFinderListItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         public static Sprite circleSprite;
         public UIPlanetFinderWindow window;
@@ -69,18 +69,27 @@ namespace PlanetFinderMod
         [SerializeField]
         public UIButton locateBtn;
 
+        [SerializeField]
+        public GameObject baseObj;
+
         public StringBuilder sb;
 
-        public static UIPlanetFinderListItem CreatePrefab()
+        public static void CreateListViewPrefab(UIData data)
         {
             RectTransform rect;
-            UIPlanetFinderListItem item = Util.CreateGameObject<UIPlanetFinderListItem>("list-item", 600f, 24f);
-            RectTransform baseTrans = Util.NormalizeRectWithTopLeft(item, 0f, 0f);
+            UIPlanetFinderListItem item = data.gameObject.AddComponent<UIPlanetFinderListItem>();
+            data.com_data = item;
+            Image bg = Util.CreateGameObject<Image>("list-item", 600f, 24f);
+            bg.gameObject.SetActive(true);
+            RectTransform baseTrans = Util.NormalizeRectWithTopLeft(bg, 0f, 0f, item.transform);
+            item.baseObj = bg.gameObject;
 
-            Image bg = item.gameObject.AddComponent<Image>();
             bg.color = new Color(0.2f, 0.2f, 0.2f, 0.1f);
+            (item.transform as RectTransform).sizeDelta = new Vector2(600f, 24f);
             baseTrans.sizeDelta = new Vector2(600f, 24f);
-            UIResAmountEntry src=GameObject.Instantiate<UIResAmountEntry>(UIRoot.instance.uiGame.planetDetail.entryPrafab, baseTrans);
+            baseTrans.localScale = Vector3.one;
+
+            UIResAmountEntry src =GameObject.Instantiate<UIResAmountEntry>(UIRoot.instance.uiGame.planetDetail.entryPrafab, baseTrans);
             src.gameObject.SetActive(true);
 
             float rightPadding = 0f;
@@ -145,11 +154,9 @@ namespace PlanetFinderMod
 
             item.iconHide = src.iconHide;
             item.iconButton = src.iconButton;
-            item.gameObject.SetActive(true);
             //GameObject.Destroy(src.valueText.gameObject);
             GameObject.Destroy(src);
 
-            return item;
         }
 
         void Start()
@@ -291,9 +298,10 @@ namespace PlanetFinderMod
 
         public bool RefreshValues(bool shown, bool onlyNewlyEmerged = false)
         {
-            if (shown != gameObject.activeSelf)
+            //このSetActive特に不要か
+            if (shown != baseObj.activeSelf)
             {
-                gameObject.SetActive(shown);
+                baseObj.SetActive(shown);
             }
             else if (onlyNewlyEmerged)
             {
@@ -408,6 +416,14 @@ namespace PlanetFinderMod
             }
 
             return result;
+        }
+
+        public void OnPointerClick(PointerEventData eventData)
+        {
+            if (eventData.button == PointerEventData.InputButton.Right)
+            {
+                //UIRealtimeTip.Popup("right click:" + planetData.id, false, 0);
+            }
         }
 
         public void OnPointerEnter(PointerEventData _eventData)

@@ -103,7 +103,7 @@ namespace PlanetFinderMod
             bg.color = new Color(0f, 0f, 0f, 0.56f);
             Util.NormalizeRectWithMargin(bg, 70f, 0f, 20f, 16f, contentTrans);
 
-            planetListView = Util.CreateListView(UIPlanetFinderListItem.CreatePrefab(), "list-view", null, 16f);
+            planetListView = Util.CreateListView(UIPlanetFinderListItem.CreateListViewPrefab, "list-view", null, 16f);
             Util.NormalizeRectWithMargin(planetListView.transform, 0f, 0f, 0f, 0f, bg.transform);
             //ここでサイズ調整…
             //(planetListView.m_ItemRes.com_data.transform as RectTransform).sizeDelta = new Vector2(600f, 24f);

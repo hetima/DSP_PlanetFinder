@@ -1,4 +1,4 @@
-﻿//using System;
+﻿using System;
 //using System.Text;
 using HarmonyLib;
 using System.Collections.Generic;
@@ -189,7 +189,7 @@ namespace PlanetFinderMod
             return txt_;
         }
 
-        public static UIListView CreateListView(Component comData, string goName = "", Transform parent = null, float vsWidth = 10f)
+        public static UIListView CreateListView(Action<UIData> dataFunc, string goName = "", Transform parent = null, float vsWidth = 10f)
         {
             UIListView result;
             UIListView src = UIRoot.instance.uiGame.tutorialWindow.entryList;
@@ -204,11 +204,9 @@ namespace PlanetFinderMod
             }
 
             result = go.GetComponent<UIListView>();
-            if (comData != null)
+            if (dataFunc != null)
             {
-                result.m_ItemRes.com_data = comData;
                 RectTransform itemResTrans = result.m_ItemRes.gameObject.transform as RectTransform;
-                RectTransform transform = result.m_ItemRes.com_data.gameObject.transform as RectTransform;
 
                 //transform.anchorMin = new Vector2(0f, 1f);
                 //transform.anchorMax = new Vector2(0f, 1f);
@@ -221,24 +219,19 @@ namespace PlanetFinderMod
                     GameObject.Destroy(itemResTrans.GetChild(i).gameObject);
                 }
                 itemResTrans.DetachChildren();
+                GameObject.Destroy(itemResTrans.GetComponent<UITutorialListEntry>());
                 //GameObject.Destroy(itemResTrans.GetComponent<Image>());//
                 //GameObject.Destroy(itemResTrans.GetComponent<Button>());//
 
+                dataFunc(result.m_ItemRes);
 
-                GameObject.Destroy(itemResTrans.GetComponent<UITutorialListEntry>());
-
-                transform.SetParent(itemResTrans, false);
-                transform.anchoredPosition3D = Vector3.zero;
-                transform.localScale = Vector3.one;
-
-                result.RowHeight = (int)transform.sizeDelta.y;
+                result.RowHeight = (int)itemResTrans.sizeDelta.y;
                 result.m_ItemRes.sel_highlight = null;
-                result.m_ItemRes.com_data.gameObject.SetActive(true);
 
                 result.m_ContentPanel.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
                 result.m_ContentPanel.constraintCount = 1;
-                result.ColumnWidth = (int)transform.sizeDelta.x;
-                result.RowHeight = (int)transform.sizeDelta.y;
+                result.ColumnWidth = (int)itemResTrans.sizeDelta.x;
+                result.RowHeight = (int)itemResTrans.sizeDelta.y;
             }
             result.HorzScroll = false;
             result.VertScroll = true;

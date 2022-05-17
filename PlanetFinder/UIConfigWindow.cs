@@ -147,9 +147,17 @@ namespace PlanetFinderMod
                 x_ -= 32f;
 
             }
+            if (PLFN.aLSTMIntg.canOpenPlanetId)
+            {
+                rect = MyCheckBox.CreateCheckBox(PLFN.integrationWithLSTM, "Integration With LSTM");
+                AddElement(rect, 22f);
+                x_ += 32f;
+                txt = CreateText("Open LSTM From Context Menu");
+                txt.fontSize = 14;
+                AddElement(txt.rectTransform, 24f);
+                x_ -= 32f;
+            }
 
-
-            //Traffic Logic tab
             //tab2 = AddTab("", out tabBtn2);
             //base_ = tab2;
             y_ = 0f;

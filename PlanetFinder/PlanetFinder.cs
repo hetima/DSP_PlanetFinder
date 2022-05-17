@@ -34,7 +34,7 @@ namespace PlanetFinderMod
         public static ConfigEntry<float> mainWindowSize;
 
         public static ConfigEntry<bool> integrationWithDSPStarMapMemo;
-        
+        public static ConfigEntry<bool> integrationWithLSTM;
 
 
         void Awake()
@@ -62,7 +62,8 @@ namespace PlanetFinderMod
 
             integrationWithDSPStarMapMemo = Config.Bind("Integration", "integrationWithDSPStarMapMemo", false,
                 "Display icons set by DSPStarMapMemo");
-
+            integrationWithLSTM = Config.Bind("Integration", "integrationWithLSTM", false,
+                "open LSTM from context menu");
             harmony.PatchAll(typeof(Patch));
             harmony.PatchAll(typeof(MyWindowCtl.Patch));
             harmony.PatchAll(typeof(StarDistance.Patch));

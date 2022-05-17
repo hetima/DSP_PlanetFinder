@@ -718,6 +718,7 @@ namespace PlanetFinderMod
         public enum EMenuCommand
         {
             OpenStarmap = 0,
+            OpenLSTM = 1,
         }
 
         public void ShowMenu(UIPlanetFinderListItem item)
@@ -740,6 +741,7 @@ namespace PlanetFinderMod
 
             menuTarget = item;
             menuTarget.LockAppearance();
+            RefreshMenuBox();
             menuComboBox.OnPopButtonClick();
         }
 
@@ -749,9 +751,17 @@ namespace PlanetFinderMod
             List<int> itemsData = menuComboBox.ItemsData;
             items.Clear();
             itemsData.Clear();
+
             int itemCount = 1;
             items.Add("Show In Starmap");
             itemsData.Add((int)EMenuCommand.OpenStarmap);
+
+            if (PLFN.aLSTMIntg.canOpenPlanetId && PLFN.integrationWithLSTM.Value)
+            {
+                items.Add("Open LSTM");
+                itemsData.Add((int)EMenuCommand.OpenLSTM);
+                itemCount++;
+            }
 
             menuComboBox.DropDownCount = itemCount;
 
@@ -776,6 +786,9 @@ namespace PlanetFinderMod
                 {
                     case EMenuCommand.OpenStarmap:
                         PLFN.LocatePlanet(menuTarget.planetData?.id ?? 0);
+                        break;
+                    case EMenuCommand.OpenLSTM:
+                        PLFN.aLSTMIntg.OpenPlanetId(menuTarget.planetData?.id ?? 0);
                         break;
                     default:
                         break;

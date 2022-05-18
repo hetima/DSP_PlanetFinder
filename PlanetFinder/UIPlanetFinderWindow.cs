@@ -718,7 +718,8 @@ namespace PlanetFinderMod
         public enum EMenuCommand
         {
             OpenStarmap = 0,
-            OpenLSTM = 1,
+            OpenLSTM,
+            SetCruiseAssist,
         }
 
         public void ShowMenu(UIPlanetFinderListItem item)
@@ -762,6 +763,13 @@ namespace PlanetFinderMod
                 itemsData.Add((int)EMenuCommand.OpenLSTM);
                 itemCount++;
             }
+            if (PLFN.aCruiseAssistIntg.canSelectPlanet && PLFN.integrationWithCruiseAssist.Value)
+            {
+                items.Add("CruiseAssist");
+                itemsData.Add((int)EMenuCommand.SetCruiseAssist);
+                itemCount++;
+            }
+
 
             menuComboBox.DropDownCount = itemCount;
 
@@ -789,6 +797,9 @@ namespace PlanetFinderMod
                         break;
                     case EMenuCommand.OpenLSTM:
                         PLFN.aLSTMIntg.OpenPlanetId(menuTarget.planetData?.id ?? 0);
+                        break;
+                    case EMenuCommand.SetCruiseAssist:
+                        PLFN.aCruiseAssistIntg.SelectPlanetOrStar(menuTarget.planetData, menuTarget.planetData.star);
                         break;
                     default:
                         break;

@@ -35,6 +35,7 @@ namespace PlanetFinderMod
 
         public static ConfigEntry<bool> integrationWithDSPStarMapMemo;
         public static ConfigEntry<bool> integrationWithLSTM;
+        public static ConfigEntry<bool> integrationWithCruiseAssist;
 
 
         void Awake()
@@ -64,6 +65,8 @@ namespace PlanetFinderMod
                 "Display icons set by DSPStarMapMemo");
             integrationWithLSTM = Config.Bind("Integration", "integrationWithLSTM", false,
                 "open LSTM from context menu");
+            integrationWithCruiseAssist = Config.Bind("Integration", "integrationWithCruiseAssist", false,
+                "set CruiseAssist from context menu");
             harmony.PatchAll(typeof(Patch));
             harmony.PatchAll(typeof(MyWindowCtl.Patch));
             harmony.PatchAll(typeof(StarDistance.Patch));
@@ -259,6 +262,7 @@ namespace PlanetFinderMod
 
         public static LSTMIntg aLSTMIntg;
         public static DSPStarMapMemoIntg aDSPStarMapMemoIntg;
+        public static CruiseAssistIntg aCruiseAssistIntg;
         static class Patch
         {
             internal static bool _initialized = false;
@@ -272,6 +276,7 @@ namespace PlanetFinderMod
                     _initialized = true;
                     aLSTMIntg = new LSTMIntg();
                     aDSPStarMapMemoIntg = new DSPStarMapMemoIntg();
+                    aCruiseAssistIntg = new CruiseAssistIntg();
 
                     planetFinder = UIPlanetFinderWindow.CreateInstance();
                     _configWin = UIConfigWindow.CreateWindow();

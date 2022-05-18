@@ -157,7 +157,17 @@ namespace PlanetFinderMod
                 AddElement(txt.rectTransform, 24f);
                 x_ -= 32f;
             }
-
+            if (PLFN.aCruiseAssistIntg.canSelectPlanet)
+            {
+                rect = MyCheckBox.CreateCheckBox(PLFN.integrationWithCruiseAssist, "Integration With CruiseAssist");
+                AddElement(rect, 22f);
+                x_ += 32f;
+                txt = CreateText("Set CruiseAssist From Context Menu");
+                txt.fontSize = 14;
+                AddElement(txt.rectTransform, 24f);
+                x_ -= 32f;
+                
+            }
             //tab2 = AddTab("", out tabBtn2);
             //base_ = tab2;
             y_ = 0f;

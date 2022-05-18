@@ -66,6 +66,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CruiseAssistIntg.cs" />
     <Compile Include="DSPStarMapMemoIntg.cs" />
     <Compile Include="LSTMIntg.cs" />
     <Compile Include="MyCheckBox.cs" />

@@ -29,7 +29,7 @@ Clicking the arrow button displays the planet in the starmap view.
 
 ## Release Notes
 
-### v
+### v0.4.0
 - Added context menu to list. Right-click on the list to display the menu
 - Added integration with [LSTM](https://dsp.thunderstore.io/package/hetima/LSTM/) mod. Open LSTM window from context menu if it's installed (on/off in ConfigWindow)
 - Added integration with [CruiseAssist](https://dsp.thunderstore.io/package/tanu/CruiseAssist/) mod. Set the assist target from context menu if it's installed (on/off in ConfigWindow)

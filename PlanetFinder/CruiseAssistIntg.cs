@@ -34,6 +34,10 @@ namespace PlanetFinderMod
 
         public void SelectPlanetOrStar(PlanetData planet, StarData star = null)
         {
+            if (_selectPlanetOrStar == null)
+            {
+                return;
+            }
             if (planet != null && star == null)
             {
                 star = planet.star;

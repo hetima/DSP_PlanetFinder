@@ -54,11 +54,66 @@ namespace PlanetFinderMod
         public bool isPointEnter;
         private bool focusPointEnter;
 
+        private bool calculated;
+        private bool calculating;
+
         public static UIPlanetFinderWindow CreateInstance()
         {
             UIPlanetFinderWindow win = MyWindowCtl.CreateWindow<UIPlanetFinderWindow>("PlanetFinderWindow", "Planet Finder");
 
             return win;
+        }
+
+        public void BeginGame()
+        {
+            if (DSPGame.IsMenuDemo)
+            {
+                return;
+            }
+            calculated = false;
+            calculating = false;
+        }
+
+        public void RequestCalcAll()
+        {
+            if (calculated)
+            {
+                return;
+            }
+            PlanetData calcPlanet = null;
+            GalaxyData galaxy = GameMain.galaxy;
+            for (int i = 0; i < galaxy.starCount; i++)
+            {
+                StarData star = galaxy.stars[i];
+                for (int j = 0; j < star.planetCount; j++)
+                {
+                    PlanetData planet = star.planets[j];
+                    //calculatingとかloadedとかのチェックはしてくれるので、ここではcalculatedだけチェックでよい
+                    if (!planet.calculated)
+                    {
+                        if (!calculating)
+                        {
+                            PlanetModelingManager.RequestCalcPlanet(planet);
+                            //or planet.RunCalculateThread();
+                        }
+                        calcPlanet = planet;
+                    }
+                }
+                if (calculating && calcPlanet != null)
+                {
+                    //とりあえずまだ計算中ということだけ分かればよい
+                    break;
+                }
+            }
+            if (calcPlanet == null)
+            {
+                calculated = true;
+                calculating = false;
+            }
+            else
+            {
+                calculating = true;
+            }
         }
 
         public void SetUpAndOpen(int _itemId = 0)
@@ -91,6 +146,8 @@ namespace PlanetFinderMod
         protected override void _OnCreate()
         {
             _eventLock = true;
+            calculated = false;
+            calculating = false;
             windowTrans = MyWindowCtl.GetRectTransform(this);
             windowTrans.sizeDelta = WindowSize();
 
@@ -316,6 +373,19 @@ namespace PlanetFinderMod
                 valid = RefreshListView(planetListView);
                 //UIListViewのStart()で設定されるのでその後に呼ぶ必要がある
                 planetListView.m_ScrollRect.scrollSensitivity = 28f;
+
+                if (!calculated)
+                {
+                    if (!calculating)
+                    {
+                        MyWindowCtl.SetTitle(this, "Planet Finder*");
+                    }
+                    RequestCalcAll();
+                    if (calculated)
+                    {
+                        MyWindowCtl.SetTitle(this, "Planet Finder");
+                    }
+                }
             }
             else
             {
@@ -408,7 +478,7 @@ namespace PlanetFinderMod
             {
                 if (!planet.calculated)
                 {
-                    //planet.RunCalculateThread();
+                    return false;
                 }
                 VeinGroup[] runtimeVeinGroups = planet.runtimeVeinGroups;
                 if (runtimeVeinGroups == null)

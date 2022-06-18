@@ -284,6 +284,10 @@ namespace PlanetFinderMod
 
                     CreateUI();
                 }
+                else
+                {
+                    planetFinder?.BeginGame();
+                }
             }
 
             [HarmonyPostfix, HarmonyPatch(typeof(GameData), "ArrivePlanet")]

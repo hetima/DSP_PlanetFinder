@@ -406,20 +406,58 @@ namespace PlanetFinderMod
             }
             if (itemId <= veinCount)
             {
-                if (planet.loaded)
+                if (!planet.calculated)
                 {
-                    if (planet.veinAmounts[itemId] > 0)
+                    //planet.RunCalculateThread();
+                }
+                VeinGroup[] runtimeVeinGroups = planet.runtimeVeinGroups;
+                if (runtimeVeinGroups == null)
+                {
+                    if (planet.data == null)
                     {
-                        return true;
+                        return false;
                     }
+                    VeinData[] veinPool = planet.data.veinPool;
+                    int veinCursor = planet.data.veinCursor;
+                    for (int i = 1; i < veinCursor; i++)
+                    {
+                        if (veinPool[i].id == i && (int)veinPool[i].type == itemId)
+                        {
+                            if (veinPool[i].amount > 0)
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
                 }
                 else
                 {
-                    if (planet.veinSpotsSketch != null && planet.veinSpotsSketch[itemId] > 0)
+                    for (int i = 1; i < runtimeVeinGroups.Length; i++)
                     {
-                        return true;
+                        if ((int)runtimeVeinGroups[i].type == itemId)
+                        {
+                            if (runtimeVeinGroups[i].amount > 0)
+                            {
+                                return true;
+                            }
+                        }
                     }
                 }
+                //if (planet.loaded)
+                //{
+                //    if (planet.veinAmounts[itemId] > 0)
+                //    {
+                //        return true;
+                //    }
+                //}
+                //else
+                //{
+                //    if (planet.veinSpotsSketch != null && planet.veinSpotsSketch[itemId] > 0)
+                //    {
+                //        return true;
+                //    }
+                //}
             }
 
             return false;

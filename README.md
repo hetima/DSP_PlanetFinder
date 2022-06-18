@@ -9,8 +9,12 @@ It can be opened from the button that will be added to the panel at the bottom l
 The scope of the list can be narrowed down by "all planets", "current star system", "planets where facilities are being built", and "recently visited planets". From there, you can further filter by which resources are present.  
 Resources can be multi-selected by shift-clicking, narrowing down the list of planets that have all the resources.
 
-The display area shows the name of the planet, distance from the current star system, and the actual number of selected resources (if possible) and approximate number of chunks of veins. The power status can also be displayed and switched to resource information by pressing the Tab key. If the electricity supply-demand ratio exceeds 90%, an orange display warns.  
+The display area shows the name of the planet, distance from the current star system, and the actual number of selected resources and approximate number of chunks of veins. The power status can also be displayed and switched to resource information by pressing the Tab key. If the electricity supply-demand ratio exceeds 90%, an orange display warns.  
 Clicking the arrow button displays the planet in the starmap view.
+
+## Attention
+
+The resource calculation method has changed since version 0.4.1. Information on all planets cannot be retrieved immediately after loading. Information acquisition begins when the Planet Finder window is first opened. This will take some time. During the calculation, "*" mark will be added to the window title and will disappear when all information has been calculated.
 
 
 ![screen shot](https://raw.githubusercontent.com/hetima/DSP_PlanetFinder/main/screen.jpg)
@@ -26,8 +30,16 @@ Clicking the arrow button displays the planet in the starmap view.
 検索結果表示部分には惑星の名前、現在の星系からの距離、選択した資源の実数とおおまかな鉱脈の数が表示されます。電力の状態も表示でき、Tabキーを押すことで資源の情報と切り替わります。電力需給率が90%を超えていたらオレンジ色の表示で警告します。  
 矢印のボタンをクリックするとその惑星を星図ビューで表示します。
 
+## ご注意
+
+バージョン0.4.1から資源の算出方法が変わりました。ロード直後はすべての惑星の情報を取得することができません。最初にPlanet Finderのウィンドウを開いた時点で情報取得を始めます。これにはしばらく時間がかかります。ウィンドウタイトルに「*」マークが追加され、全情報の算出が完了すると消えます。
+
 
 ## Release Notes
+
+### v0.4.1
+- Update for game version 0.9.26.13026
+- Resource calculation method has changed
 
 ### v0.4.0
 - Added context menu to list. Right-click on the list to display the menu

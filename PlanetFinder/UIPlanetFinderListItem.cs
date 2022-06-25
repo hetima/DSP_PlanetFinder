@@ -420,6 +420,7 @@ namespace PlanetFinderMod
         {
             long energyCapacity = 0L;
             long energyRequired = 0L;
+            long energyX = 0L;
             string result = "";
             networkCount = 0;
             PowerSystem powerSystem = planetData.factory.powerSystem;
@@ -431,6 +432,10 @@ namespace PlanetFinderMod
                     networkCount++;
                     energyCapacity += powerNetwork.energyCapacity;
                     energyRequired += powerNetwork.energyRequired;
+                    if (powerNetwork.energyExchanged < 0L)
+                    {
+                        energyX -= powerNetwork.energyExchanged;
+                    }
                 }
             }
             if (energyCapacity > 0)
@@ -439,17 +444,25 @@ namespace PlanetFinderMod
                 result = window.sbWatt.ToString();
                 StringBuilderUtility.WriteKMG(window.sbWatt, 8, energyCapacity * 60L, false);
                 result += " / " + window.sbWatt.ToString().Trim();
-                double ratio = (double)energyRequired / (double)energyCapacity;
+                if (energyX > 0L)
+                {
+                    StringBuilderUtility.WriteKMG(window.sbWatt, 8, energyX * 60L, false);
+                    result += " + " + window.sbWatt.ToString().Trim();
+                }
+                double ratio = (double)energyRequired / (double)(energyCapacity + energyX);
                 if (ratio > 0.9f)
                 {
                     result += " (" + ratio.ToString("P1") +")";
-                    if (ratio > 0.99f)
+                    if (energyX <= 0L)
                     {
-                        result = "<color=#FF404D99>" + result + "</color>";
-                    }
-                    else
-                    {
-                        result = "<color=#DB883E85>" + result + "</color>";
+                        if (ratio > 0.99f)
+                        {
+                            result = "<color=#FF404D99>" + result + "</color>";
+                        }
+                        else
+                        {
+                            result = "<color=#DB883E85>" + result + "</color>";
+                        }
                     }
                 }
             }

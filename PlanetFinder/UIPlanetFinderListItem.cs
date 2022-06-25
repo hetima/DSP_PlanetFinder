@@ -438,7 +438,7 @@ namespace PlanetFinderMod
                     }
                 }
             }
-            if (energyCapacity > 0)
+            if (energyCapacity > 0L || energyX > 0L)
             {
                 StringBuilderUtility.WriteKMG(window.sbWatt, 8, energyRequired * 60L, false);
                 result = window.sbWatt.ToString();

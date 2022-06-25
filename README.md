@@ -37,6 +37,10 @@ The resource calculation method has changed since version 0.4.1. Information on 
 
 ## Release Notes
 
+### v0.4.2
+- Discharge value of Energy Exchanger is now also calculated
+- "Has Factory" filter is now accurate
+
 ### v0.4.1
 - Update for game version 0.9.26.13026
 - Resource calculation method has changed

@@ -567,6 +567,10 @@ namespace PlanetFinderMod
 
             for (int i = 0; i < factoryCount; i++)
             {
+                if (GameMain.data.factories[i].entityCount == 0)
+                {
+                    continue;
+                }
                 int planetId = GameMain.data.factories[i].planetId;
                 PlanetData planetData =  GameMain.data.factories[i].planet;
                 if (planetData != null)

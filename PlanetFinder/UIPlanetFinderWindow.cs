@@ -182,7 +182,14 @@ namespace PlanetFinderMod
                 }
                 Text btnText = btn.transform.Find("Text").GetComponent<Text>();
                 btnText.text = label;
-                btnText.fontSize = 16;
+                if (btnText.font.name == "MPMK85") //JP MOD
+                {
+                    btnText.fontSize = 16;
+                }
+                else // "DIN"
+                {
+                    btnText.fontSize = 14;
+                }
                 btn.data = data;
 
                 RectTransform btnRect = Util.NormalizeRectWithTopLeft(btn, scopex_, 0f, contentTrans);

@@ -80,14 +80,17 @@ namespace PlanetFinderMod
             {
                 return;
             }
-            PlanetData calcPlanet = null;
             GalaxyData galaxy = GameMain.galaxy;
+            int planetsCount = 0;
+            int calculatingPlanetsCount = 0;
+
             for (int i = 0; i < galaxy.starCount; i++)
             {
                 StarData star = galaxy.stars[i];
                 for (int j = 0; j < star.planetCount; j++)
                 {
                     PlanetData planet = star.planets[j];
+                    planetsCount++;
                     //calculatingとかloadedとかのチェックはしてくれるので、ここではcalculatedだけチェックでよい
                     if (!planet.calculated)
                     {
@@ -96,23 +99,20 @@ namespace PlanetFinderMod
                             PlanetModelingManager.RequestCalcPlanet(planet);
                             //or planet.RunCalculateThread();
                         }
-                        calcPlanet = planet;
+                        calculatingPlanetsCount++;
                     }
                 }
-                if (calculating && calcPlanet != null)
-                {
-                    //とりあえずまだ計算中ということだけ分かればよい
-                    break;
-                }
             }
-            if (calcPlanet == null)
+            if (calculatingPlanetsCount == 0)
             {
                 calculated = true;
                 calculating = false;
+                MyWindowCtl.SetTitle(this, "Planet Finder");
             }
             else
             {
                 calculating = true;
+                MyWindowCtl.SetTitle(this, "Init... (" + (planetsCount - calculatingPlanetsCount).ToString() + "/" + planetsCount.ToString() +")");
             }
         }
 
@@ -376,15 +376,7 @@ namespace PlanetFinderMod
 
                 if (!calculated)
                 {
-                    if (!calculating)
-                    {
-                        MyWindowCtl.SetTitle(this, "Planet Finder*");
-                    }
                     RequestCalcAll();
-                    if (calculated)
-                    {
-                        MyWindowCtl.SetTitle(this, "Planet Finder");
-                    }
                 }
             }
             else

@@ -14,7 +14,7 @@ Clicking the arrow button displays the planet in the starmap view.
 
 ## Attention
 
-The resource calculation method has changed since version 0.4.1. Information on all planets cannot be retrieved immediately after loading. Information acquisition begins when the Planet Finder window is first opened. This will take some time. During the calculation, "*" mark will be added to the window title and will disappear when all information has been calculated.
+The resource calculation method has changed since version 0.4.1. Information on all planets cannot be retrieved immediately after loading. Information acquisition begins when the Planet Finder window is first opened. This will take some time. Progress will be displayed as the window title until all information has been calculated
 
 
 ![screen shot](https://raw.githubusercontent.com/hetima/DSP_PlanetFinder/main/screen.jpg)
@@ -32,10 +32,14 @@ The resource calculation method has changed since version 0.4.1. Information on 
 
 ## ご注意
 
-バージョン0.4.1から資源の算出方法が変わりました。ロード直後はすべての惑星の情報を取得することができません。最初にPlanet Finderのウィンドウを開いた時点で情報取得を始めます。これにはしばらく時間がかかります。ウィンドウタイトルに「*」マークが追加され、全情報の算出が完了すると消えます。
+バージョン0.4.1から資源の算出方法が変わりました。ロード直後はすべての惑星の情報を取得することができません。最初にPlanet Finderのウィンドウを開いた時点で情報取得を始めます。これにはしばらく時間がかかります。全情報の算出が完了するまでウィンドウタイトルに進捗が表示されます。
 
 
 ## Release Notes
+
+### v0.4.3
+- Added detailed initializing progress display
+- Corrected some font sizes
 
 ### v0.4.2
 - Discharge value of Energy Exchanger is now also calculated

@@ -12,7 +12,7 @@ using UnityEngine.EventSystems;
 namespace PlanetFinderMod
 {
 
-    [BepInPlugin(__GUID__, __NAME__, "0.4.2")]
+    [BepInPlugin(__GUID__, __NAME__, "0.4.3")]
     public class PLFN : BaseUnityPlugin
     {
         public const string __NAME__ = "PlanetFinder";

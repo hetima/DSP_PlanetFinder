@@ -127,7 +127,7 @@ namespace PlanetFinderMod
             //valueSketchText
             item.valueSketchText = GameObject.Instantiate<Text>(item.valueText, item.valueText.transform.parent);
             item.valueSketchText.gameObject.name = "valueSketchText";
-            item.valueSketchText.alignment = TextAnchor.UpperLeft;
+            item.valueSketchText.alignment = TextAnchor.MiddleLeft;
             rect = Util.NormalizeRectWithTopLeft(item.valueSketchText, 504f - rightPadding - leftPadding, 2f);
             rect.sizeDelta = new Vector2(24f, 24f);
 

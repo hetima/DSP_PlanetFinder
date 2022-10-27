@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using BepInEx;
 
 namespace PlanetFinderMod
 {
@@ -46,7 +47,9 @@ namespace PlanetFinderMod
         public UIItemSelection itemSelection;
         public MyListView planetListView;
         public Text countText;
-
+        public InputField searchField;
+        public string searchString;
+        public UIButton searchFieldClearBtn;
 
         public StringBuilder sb;
         public StringBuilder sbOil;
@@ -99,6 +102,8 @@ namespace PlanetFinderMod
                     _allPlanetList.Add(d);
                 }
             }
+            searchField.text = "";
+            searchString = null;
             _eventLock = false;
         }
 
@@ -288,6 +293,27 @@ namespace PlanetFinderMod
                 configBtn.transitions[0].pressedColor = new Color(1f, 1f, 1f, 0.5f);
             }
 
+
+            //search field
+            UIStationWindow stationWindow = UIRoot.instance.uiGame.stationWindow;
+            //public InputField nameInput;
+            searchField = GameObject.Instantiate<InputField>(stationWindow.nameInput);
+            searchField.gameObject.name = "search-field";
+            Destroy(searchField.GetComponent<UIButton>());
+            searchField.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.05f);
+            rect = Util.NormalizeRectWithTopLeft(searchField, 400f, -4f, contentTrans);
+            rect.sizeDelta = new Vector2(180, rect.sizeDelta.y);
+            searchField.textComponent.fontSize = 16;
+
+            //searchFieldClearBtn
+            searchFieldClearBtn = Util.MakeSmallTextButton("X", 18f, 20f);
+            searchFieldClearBtn.gameObject.name = "search-clear-btn";
+            Util.NormalizeRectWithTopLeft(searchFieldClearBtn, 557f, 0f, contentTrans);
+            searchFieldClearBtn.transform.SetParent(contentTrans, false);
+            searchFieldClearBtn.onClick += OnClearSearchField;
+            searchFieldClearBtn.gameObject.SetActive(false);
+
+
             //menu
             CreateMenuBox();
 
@@ -361,12 +387,18 @@ namespace PlanetFinderMod
 
         protected override void _OnOpen()
         {
-
+            searchField.onValueChanged.AddListener(new UnityAction<string>(this.OnSearchFieldValueChanged));
+            searchField.onEndEdit.AddListener(new UnityAction<string>(OnSearchFieldEndEdit));
         }
 
         protected override void _OnClose()
         {
-            //planetListView.Clear();
+            searchField.onValueChanged.RemoveAllListeners();
+            searchField.onEndEdit.RemoveAllListeners();
+            if (searchField.isFocused)
+            {
+                EventSystem.current.SetSelectedGameObject(null);
+            }
             isPointEnter = false;
         }
 
@@ -447,6 +479,47 @@ namespace PlanetFinderMod
             if (focus)
             {
                 this.isPointEnter = this.focusPointEnter;
+            }
+        }
+
+        private void OnSearchFieldEndEdit(string str)
+        {
+            OnSearchFieldValueChanged(str);
+            EventSystem.current.SetSelectedGameObject(windowTrans.gameObject);
+        }
+
+        private void OnSearchFieldValueChanged(string str)
+        {
+            string text = searchField.text;
+            if (string.IsNullOrEmpty(text))
+            {
+                text = null;
+                searchFieldClearBtn.gameObject.SetActive(false);
+                //searchFieldでesc押したりその他動作で、その後escでウィンドウ閉じなくなるので対策
+                if (!searchField.isFocused || searchField.wasCanceled || EventSystem.current.currentSelectedGameObject == null)
+                {
+                    EventSystem.current.SetSelectedGameObject(windowTrans.gameObject);
+                }
+            }
+            else
+            {
+                searchFieldClearBtn.gameObject.SetActive(true);
+            }
+            if (text != searchString)
+            {
+                searchString = text;
+                SetUpData();
+            }
+        }
+        public void OnClearSearchField(int obj)
+        {
+            string text = searchField.text;
+            if (!string.IsNullOrWhiteSpace(text))
+            {
+                searchField.text = "";
+                searchString = null;
+                searchFieldClearBtn.gameObject.SetActive(false);
+                SetUpData();
             }
         }
 
@@ -693,6 +766,24 @@ namespace PlanetFinderMod
                     }
                 }
             }
+
+            //
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                string str = searchString.Trim().ToLower();
+                foreach (PlanetListData d in _allPlanetList)
+                {
+                    if (d.shouldShow && d.planetData.displayName.ToLower().Contains(str))
+                    {
+                        //d.shouldShow = true;
+                    }
+                    else
+                    {
+                        d.shouldShow = false;
+                    }
+                }
+            }
+
 
             //add to list
             _planetList.Clear();

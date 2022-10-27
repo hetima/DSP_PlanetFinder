@@ -364,7 +364,7 @@ namespace PlanetFinderMod
             if (planetData != null)
             {
                 int step = Time.frameCount % 30;
-                if (step == 0)
+                if (step == 0 || window.needsReflesh)
                 {
                     RefreshValues();
                 }

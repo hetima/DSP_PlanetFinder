@@ -36,6 +36,7 @@ namespace PlanetFinderMod
     {
         public RectTransform windowTrans;
         public RectTransform contentTrans;
+        public bool needsReflesh;
 
         public Scope scope;
         public List<UIButton> scopeButtons;
@@ -344,6 +345,7 @@ namespace PlanetFinderMod
 
         protected override void _OnUpdate()
         {
+            needsReflesh = false;
             if (VFInput.escape && !UIRoot.instance.uiGame.starmap.active && !VFInput.inputing)
             {
                 VFInput.UseEscape();
@@ -375,21 +377,15 @@ namespace PlanetFinderMod
                 targetItemId = itemSelection.NextTargetItemId(targetItemId, PLFN.showPowerState.Value);
                 if (targetItemId != current)
                 {
-                    RefreshListView(planetListView);
+                    needsReflesh = true;
                 }
             }
             else if (step == 0)
             {
-                valid = RefreshListView(planetListView);
-
                 if (!calculated)
                 {
                     RequestCalcAll();
                 }
-            }
-            else
-            {
-                //RefreshListView(planetListView, true);
             }
 
 
@@ -743,18 +739,6 @@ namespace PlanetFinderMod
 
         }
 
-
-
-        internal bool RefreshListView(MyListView listView, bool onlyNewlyEmerged = false)
-        {
-            if (_eventLock)
-            {
-                return true;
-            }
-
-
-            return true;
-        }
 
         //menu
 

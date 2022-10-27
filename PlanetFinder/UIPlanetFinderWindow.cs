@@ -773,17 +773,24 @@ namespace PlanetFinderMod
                 string str = searchString.Trim().ToLower();
                 foreach (PlanetListData d in _allPlanetList)
                 {
-                    if (d.shouldShow && d.planetData.displayName.ToLower().Contains(str))
+                    if (d.shouldShow)
                     {
-                        //d.shouldShow = true;
-                    }
-                    else
-                    {
+                        if (d.planetData.displayName.ToLower().Contains(str))
+                        {
+                            continue;
+                        }
+                        else if (PLFN.integrationWithDSPStarMapMemo.Value && PLFN.aDSPStarMapMemoIntg.canGetDesc)
+                        {
+                            string memo = PLFN.aDSPStarMapMemoIntg.GetDesc(d.planetData.id);
+                            if (!string.IsNullOrWhiteSpace(memo) && memo.ToLower().Contains(str))
+                            {
+                                continue;
+                            }
+                        }
                         d.shouldShow = false;
                     }
                 }
             }
-
 
             //add to list
             _planetList.Clear();

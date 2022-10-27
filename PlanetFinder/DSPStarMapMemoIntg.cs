@@ -9,12 +9,15 @@ namespace PlanetFinderMod
     public class DSPStarMapMemoIntg
     {
         public readonly bool canGetSignalIconId;
+        public readonly bool canGetDesc;
         private FieldInfo _memoPool;
         private FieldInfo _signalIconIdField;
+        private FieldInfo _descField;
 
         public DSPStarMapMemoIntg()
         {
             canGetSignalIconId = false;
+            canGetDesc = false;
             try
             {
                 Dictionary<string, PluginInfo> plugins = BepInEx.Bootstrap.Chainloader.PluginInfos;
@@ -25,9 +28,11 @@ namespace PlanetFinderMod
                     if (classType != null && classType2 != null)
                     {
                         _signalIconIdField = classType2.GetField("signalIconId");
+                        _descField = classType2.GetField("desc");
                         _memoPool = classType.GetField("memoPool", BindingFlags.Public | BindingFlags.Static);
                     }
-                    canGetSignalIconId = (_memoPool != null);
+                    canGetSignalIconId = (_memoPool != null && _signalIconIdField != null);
+                    canGetDesc = (_memoPool != null && _descField != null);
                 }
             }
             catch (Exception)
@@ -65,7 +70,29 @@ namespace PlanetFinderMod
             }
             return 0;
         }
-
+        public string GetDesc(int planetId)
+        {
+            if (_memoPool != null && _descField != null)
+            {
+                object d = _memoPool.GetValue(null);
+                if (d == null)
+                {
+                    return null;
+                }
+                object[] arg = new object[] { planetId, null };
+                bool flag = (bool)d.GetType().InvokeMember("TryGetValue", BindingFlags.InvokeMethod, null, d, arg);
+                if (flag && arg.Length == 2 && arg[1] != null)
+                {
+                    object descFieldObj = _descField.GetValue(arg[1]);
+                    if (descFieldObj != null)
+                    {
+                        string desc = descFieldObj as string;
+                        return desc;
+                    }
+                }
+            }
+            return null;
+        }
     }
 }
 

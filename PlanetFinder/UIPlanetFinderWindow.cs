@@ -12,7 +12,7 @@ namespace PlanetFinderMod
     public enum Scope
     {
         None = 0,
-        Star,
+        //Star,
         CurrentStar,
         Planet,
         HasFactory,
@@ -42,7 +42,7 @@ namespace PlanetFinderMod
         public int targetItemId;
 
         public UIItemSelection itemSelection;
-        public UIListView planetListView;
+        public MyListView planetListView;
         public Text countText;
 
 
@@ -142,6 +142,12 @@ namespace PlanetFinderMod
             }
             return new Vector2(640, 174 + 28 * rows);
         }
+        private void PopulateItem(MonoBehaviour item, int rowIndex)
+        {
+            UIPlanetFinderListItem child = item as UIPlanetFinderListItem;
+            child.Init(_planetList[rowIndex], this);
+            child.RefreshValues();
+        }
 
         protected override void _OnCreate()
         {
@@ -160,10 +166,11 @@ namespace PlanetFinderMod
             bg.color = new Color(0f, 0f, 0f, 0.56f);
             Util.NormalizeRectWithMargin(bg, 70f, 0f, 20f, 16f, contentTrans);
 
-            planetListView = Util.CreateListView(UIPlanetFinderListItem.CreateListViewPrefab, "list-view", null, 16f);
+            planetListView = MyListView.CreateListView(UIPlanetFinderListItem.CreateListViewPrefab(), PopulateItem, "list-view");
             Util.NormalizeRectWithMargin(planetListView.transform, 0f, 0f, 0f, 0f, bg.transform);
             //ここでサイズ調整…
             //(planetListView.m_ItemRes.com_data.transform as RectTransform).sizeDelta = new Vector2(600f, 24f);
+            planetListView.m_ScrollRect.scrollSensitivity = 28f;
 
             //scope buttons
             float scopex_ = 4f;
@@ -331,7 +338,7 @@ namespace PlanetFinderMod
 
         protected override void _OnClose()
         {
-            planetListView.Clear();
+            //planetListView.Clear();
             isPointEnter = false;
         }
 
@@ -358,10 +365,6 @@ namespace PlanetFinderMod
                 return;
             }
 
-            if (_planetList.Count > 0)
-            {
-                AddToListView(planetListView, 5, _planetList);
-            }
 
             bool valid = true;
             int step = Time.frameCount % 30;
@@ -372,14 +375,12 @@ namespace PlanetFinderMod
                 targetItemId = itemSelection.NextTargetItemId(targetItemId, PLFN.showPowerState.Value);
                 if (targetItemId != current)
                 {
-                    valid = RefreshListView(planetListView);
+                    RefreshListView(planetListView);
                 }
             }
             else if (step == 0)
             {
                 valid = RefreshListView(planetListView);
-                //UIListViewのStart()で設定されるのでその後に呼ぶ必要がある
-                planetListView.m_ScrollRect.scrollSensitivity = 28f;
 
                 if (!calculated)
                 {
@@ -388,12 +389,9 @@ namespace PlanetFinderMod
             }
             else
             {
-                RefreshListView(planetListView, true);
+                //RefreshListView(planetListView, true);
             }
-            if (!valid)
-            {
-                SetUpData();
-            }
+
 
             if (!menuComboBox.isDroppedDown && menuTarget != null)
             {
@@ -429,24 +427,20 @@ namespace PlanetFinderMod
             }
         }
 
-        internal List<PlanetListData> _planetList = new List<PlanetListData>(200);
+        internal List<PlanetListData> _planetList = new List<PlanetListData>(400);
 
         public void SetUpData()
         {
             _eventLock = true;
             _planetList.Clear();
-            planetListView.Clear();
             targetItemId = itemSelection.lastSelectedItemId;
 
             SetUpItemList();
-            _planetList.Sort((a, b) => a.distanceForSort - b.distanceForSort);
 
             _eventLock = false;
-            if (_planetList.Count > 0)
-            {
-                AddToListView(planetListView, 20, _planetList);
-            }
-            RefreshListView(planetListView);
+
+
+            //RefreshListView(planetListView);
 
         }
 
@@ -630,69 +624,50 @@ namespace PlanetFinderMod
             {
                 targets = PLFN.recentPlanets;
             }
-
-            if (filterItems.Count == 0)
+            else if (scope == Scope.Planet)
             {
-                if (scope == Scope.Planet)
-                {
-                    targets = new List<PlanetData>(320);
-                    for (int i = 0; i < galaxy.starCount; i++)
-                    {
-                        StarData star = galaxy.stars[i];
-                        targets.AddRange(star.planets);
-                    }
-                }
-
-                if (targets != null)
-                {
-                    foreach (var item in targets)
-                    {
-                        if (scope == Scope.Recent)
-                        {
-                            sortIndex++;
-                        }
-                        AddStore(item, sortIndex);
-                    }
-                    countText.text = "Result: " + targets.Count.ToString();
-                }
-                else
-                {
-                    countText.text = "";
-                }
-                return;
-            }
-
-            //filter by item
-            //foreach (int itemId in filterItems){
-            List<PlanetData> phasedTargets = new List<PlanetData>(targets != null ? targets.Count : 320);
-            if (targets != null)
-            {
-                foreach (PlanetData planet in targets)
-                {
-                    if (IsTargetPlanet(planet, filterItems))
-                    {
-                        phasedTargets.Add(planet);
-                    }
-                }
-            }
-            else
-            {
+                targets = new List<PlanetData>(320);
                 for (int i = 0; i < galaxy.starCount; i++)
                 {
                     StarData star = galaxy.stars[i];
-                    for (int j = 0; j < star.planetCount; j++)
+                    targets.AddRange(star.planets);
+                }
+            }
+
+
+            //filter by item
+            if (filterItems.Count > 0)
+            {
+                List<PlanetData> phasedTargets = new List<PlanetData>(targets != null ? targets.Count : 320);
+                if (targets != null)
+                {
+                    foreach (PlanetData planet in targets)
                     {
-                        PlanetData planet = star.planets[j];
                         if (IsTargetPlanet(planet, filterItems))
                         {
                             phasedTargets.Add(planet);
                         }
                     }
                 }
+                else
+                {
+                    for (int i = 0; i < galaxy.starCount; i++)
+                    {
+                        StarData star = galaxy.stars[i];
+                        for (int j = 0; j < star.planetCount; j++)
+                        {
+                            PlanetData planet = star.planets[j];
+                            if (IsTargetPlanet(planet, filterItems))
+                            {
+                                phasedTargets.Add(planet);
+                            }
+                        }
+                    }
+                }
+
+                targets = phasedTargets;
             }
 
-            targets = phasedTargets;
-            //}
 
             if (targets != null)
             {
@@ -710,6 +685,10 @@ namespace PlanetFinderMod
             {
                 countText.text = "";
             }
+
+            _planetList.Sort((a, b) => a.distanceForSort - b.distanceForSort);
+            planetListView.SetItemCount(_planetList.Count);
+
         }
 
         internal void AddStore(PlanetData planet, int sortIndex = -1, StarData star = null)
@@ -764,61 +743,16 @@ namespace PlanetFinderMod
 
         }
 
-        internal int AddToListView(UIListView listView, int count, List<PlanetListData> list)
-        {
-            if (list.Count < count)
-            {
-                count = list.Count;
-            }
-            if (count == 0)
-            {
-                return count;
-            }
 
-            for (int i = 0; i < count; i++)
-            {
-                PlanetListData d = list[0];
-                list.RemoveAt(0);
-                UIPlanetFinderListItem e = listView.AddItem<UIPlanetFinderListItem>();
-                e.Init(in d, this);
-            }
-            return count;
-        }
 
-        internal bool RefreshListView(UIListView listView, bool onlyNewlyEmerged = false)
+        internal bool RefreshListView(MyListView listView, bool onlyNewlyEmerged = false)
         {
             if (_eventLock)
             {
                 return true;
             }
 
-            RectTransform contentRect = (RectTransform)listView.m_ContentPanel.transform;
-            float top = -contentRect.anchoredPosition.y;
-            float height = ((RectTransform)contentRect.parent).rect.height;
-            float bottom = top - height - 120f; //項目の高さ適当な決め打ち
 
-            for (int i = 0; i < listView.ItemCount; i++)
-            {
-                UIData data = listView.GetItemNode(i);
-                UIPlanetFinderListItem e = (UIPlanetFinderListItem)data.com_data;
-                if (e != null)
-                {
-                    float itemPos = ((RectTransform)data.transform).localPosition.y;
-                    bool shown = itemPos <= top && itemPos > bottom;
-                    if (targetItemId != e.itemId)
-                    {
-                        e.itemId = targetItemId;
-                    }
-                    if (onlyNewlyEmerged && !shown)
-                    {
-                        continue;
-                    }
-                    if (!e.RefreshValues(shown, onlyNewlyEmerged))
-                    {
-                        return false;
-                    }
-                }
-            }
             return true;
         }
 

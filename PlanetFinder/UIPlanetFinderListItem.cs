@@ -4,13 +4,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System.Data.OleDb;
 
 namespace PlanetFinderMod
 {
     public class UIPlanetFinderListItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
     {
         public static Sprite circleSprite;
+        public static Color valueTextNormalColor;
+        public static Color valueTextMiningColor;
+
         public UIPlanetFinderWindow window;
+        public bool firstRefleshed;
         public PlanetData planetData;
         public StarData starData; //null if target is planet
         public string distanceStr;
@@ -36,10 +41,13 @@ namespace PlanetFinderMod
             }
             set
             {
-                _itemId = value;
-                sb = (_itemId == 7) ? window.sbOil : window.sb;
-                veinIcon.sprite = window.itemSelection.GetIconForItemId(_itemId);
-                veinIcon.enabled = (veinIcon.sprite != null);
+                if (_itemId != value)
+                {
+                    _itemId = value;
+                    sb = (_itemId == 7) ? window.sbOil : window.sb;
+                    veinIcon.sprite = window.itemSelection.GetIconForItemId(_itemId);
+                    veinIcon.enabled = (veinIcon.sprite != null);
+                }
             }
         }
 
@@ -74,11 +82,10 @@ namespace PlanetFinderMod
 
         public StringBuilder sb;
 
-        public static void CreateListViewPrefab(UIData data)
+        public static UIPlanetFinderListItem CreateListViewPrefab()
         {
             RectTransform rect;
-            UIPlanetFinderListItem item = data.gameObject.AddComponent<UIPlanetFinderListItem>();
-            data.com_data = item;
+            UIPlanetFinderListItem item = Util.CreateGameObject<UIPlanetFinderListItem>("list-item", 600f, 24f);
             Image bg = Util.CreateGameObject<Image>("list-item", 600f, 24f);
             bg.gameObject.SetActive(true);
             RectTransform baseTrans = Util.NormalizeRectWithTopLeft(bg, 0f, 0f, item.transform);
@@ -123,6 +130,8 @@ namespace PlanetFinderMod
             item.valueText.supportRichText = true;
             rect = Util.NormalizeRectWithTopLeft(item.valueText, 380f - rightPadding - leftPadding, 2f);
             rect.sizeDelta = new Vector2(100f, 24f);
+            valueTextNormalColor = item.valueText.color;
+            valueTextMiningColor = new Color(0.1f, 0.7f, 0.8f, valueTextNormalColor.a);
 
             //valueSketchText
             item.valueSketchText = GameObject.Instantiate<Text>(item.valueText, item.valueText.transform.parent);
@@ -136,7 +145,7 @@ namespace PlanetFinderMod
             if (item.veinIcon != null)
             {
                 rect = Util.NormalizeRectWithTopLeft(item.veinIcon, 482f - rightPadding - leftPadding, 2f);
-                item.veinIcon.enabled = true;
+                item.veinIcon.enabled = false;
 
                 //labelIcon
                 item.labelIcon = GameObject.Instantiate<Image>(item.veinIcon, baseTrans);
@@ -150,13 +159,15 @@ namespace PlanetFinderMod
                 UIStationWindow stationWindow = UIRoot.instance.uiGame.stationWindow;
                 circleSprite = stationWindow.storageUIPrefab.transform.Find("storage-icon-empty/white")?.GetComponent<Image>()?.sprite;
                 item.labelIcon.sprite = circleSprite;
+                item.labelIcon.enabled = true;
             }
 
             item.iconHide = src.iconHide;
             item.iconButton = src.iconButton;
             //GameObject.Destroy(src.valueText.gameObject);
             GameObject.Destroy(src);
-
+            Util.NormalizeRectWithTopLeft(item, 0f, 0f);
+            return item;
         }
 
         void Start()
@@ -223,6 +234,7 @@ namespace PlanetFinderMod
 
         public void Init(in PlanetListData d, UIPlanetFinderWindow window_)
         {
+            firstRefleshed = false;
             window = window_;
             distanceStr = d.distanceStr;
             itemId = d.itemId;
@@ -230,7 +242,8 @@ namespace PlanetFinderMod
             starData = d.starData;
             SetUpDisplayName();
             SetUpPlanetColor();
-            labelIcon.color = planetColor;
+            labelIcon.sprite = null;
+            valueText.color = valueTextNormalColor;
 
             if (PLFN.aDSPStarMapMemoIntg.canGetSignalIconId && PLFN.integrationWithDSPStarMapMemo.Value)
             {
@@ -241,6 +254,13 @@ namespace PlanetFinderMod
                     labelIcon.rectTransform.localScale = Vector3.one;
                     labelIcon.color = Color.white;
                 }
+            }
+
+            if (labelIcon.sprite == null)
+            {
+                labelIcon.color = planetColor;
+                labelIcon.sprite = circleSprite;
+                labelIcon.rectTransform.localScale = new Vector3(0.3f, 0.3f, 1f);
             }
         }
 
@@ -339,21 +359,35 @@ namespace PlanetFinderMod
             return amount;
         }
 
-        public bool RefreshValues(bool shown, bool onlyNewlyEmerged = false)
+        public void Update()
         {
-            //このSetActive特に不要か
-            if (shown != baseObj.activeSelf)
+            if (planetData != null)
             {
-                baseObj.SetActive(shown);
+                int step = Time.frameCount % 30;
+                if (step == 0)
+                {
+                    RefreshValues();
+                }
             }
-            else if (onlyNewlyEmerged)
+        }
+
+        public void RefreshValues()
+        {
+            if (!baseObj.activeSelf)
             {
-                return true;
+                return;
             }
-            if (!shown)
-            {
-                return true;
-            }
+            //else if (onlyNewlyEmerged)
+            //{
+            //    return true;
+            //}
+            //if (!shown)
+            //{
+            //    return true;
+            //}
+            int OldItemId = _itemId;
+            valueText.color = valueTextNormalColor;
+            itemId = window.targetItemId;
             if (itemId != 0)
             {
                 if (!GameMain.data.gameDesc.isInfiniteResource)
@@ -377,7 +411,19 @@ namespace PlanetFinderMod
                                 StringBuilderUtility.WriteKMG(sb, 15, amount, false);
                             }
                         }
-                        valueText.text = sb.ToString();
+                        string newVlue = sb.ToString();
+                        if (firstRefleshed && OldItemId == _itemId)
+                        {
+                            if (newVlue != valueText.text)
+                            {
+                                valueText.text = newVlue;
+                                valueText.color = valueTextMiningColor;
+                            }
+                        }
+                        else
+                        {
+                            valueText.text = newVlue;
+                        }
                     }
                     else
                     {
@@ -413,7 +459,7 @@ namespace PlanetFinderMod
                 valueSketchText.text = "";
             }
 
-            return true;
+            firstRefleshed = true;
         }
 
         public string PowerState(out int networkCount)

@@ -22,7 +22,7 @@ namespace PlanetFinderMod
     }
 
 
-    public struct PlanetListData
+    public class PlanetListData
     {
         public int distanceForSort;
         public string distanceStr;
@@ -30,6 +30,7 @@ namespace PlanetFinderMod
         public StarData starData;
         public int itemId;
         public long amount;
+        public bool shouldShow;
     }
 
     public class UIPlanetFinderWindow : ManualBehaviour, IPointerEnterHandler, IPointerExitHandler, IEventSystemHandler, MyWindow
@@ -58,6 +59,9 @@ namespace PlanetFinderMod
         private bool calculated;
         private bool calculating;
 
+        internal List<PlanetListData> _allPlanetList = new List<PlanetListData>(800);
+        internal List<PlanetListData> _planetList = new List<PlanetListData>(800);
+
         public static UIPlanetFinderWindow CreateInstance()
         {
             UIPlanetFinderWindow win = MyWindowCtl.CreateWindow<UIPlanetFinderWindow>("PlanetFinderWindow", "Planet Finder");
@@ -71,8 +75,31 @@ namespace PlanetFinderMod
             {
                 return;
             }
+            _eventLock = true;
             calculated = false;
             calculating = false;
+            GalaxyData galaxy = GameMain.galaxy;
+            _allPlanetList.Clear();
+            _planetList.Clear();
+            for (int i = 0; i < galaxy.starCount; i++)
+            {
+                StarData star = galaxy.stars[i];
+                for (int j = 0; j < star.planetCount; j++)
+                {
+                    PlanetData planetData = star.planets[j];
+                    PlanetListData d = new PlanetListData()
+                    {
+                        planetData = planetData,
+                        starData = null,
+                        distanceForSort = 0,
+                        distanceStr = null,
+                        itemId = targetItemId,
+                        shouldShow = false,
+                    };
+                    _allPlanetList.Add(d);
+                }
+            }
+            _eventLock = false;
         }
 
         public void RequestCalcAll()
@@ -423,12 +450,10 @@ namespace PlanetFinderMod
             }
         }
 
-        internal List<PlanetListData> _planetList = new List<PlanetListData>(400);
 
         public void SetUpData()
         {
             _eventLock = true;
-            _planetList.Clear();
             targetItemId = itemSelection.lastSelectedItemId;
 
             SetUpItemList();
@@ -548,45 +573,70 @@ namespace PlanetFinderMod
         }
 
 
-        public List<PlanetData> PlanetsWithFactory()
+        public void FilterPlanetsWithFactory()
         {
-
-            int factoryCount = GameMain.data.factoryCount;
-            List<PlanetData> targets = new List<PlanetData>(factoryCount);
-
-            for (int i = 0; i < factoryCount; i++)
+            foreach (PlanetListData d in _allPlanetList)
             {
-                if (GameMain.data.factories[i].entityCount == 0)
+                int entityCount = d.planetData?.factory?.entityCount ?? 0;
+                if (entityCount > 0)
                 {
-                    continue;
+                    d.shouldShow = true;
                 }
-                int planetId = GameMain.data.factories[i].planetId;
-                PlanetData planetData =  GameMain.data.factories[i].planet;
-                if (planetData != null)
+                else
                 {
-                    targets.Add(planetData);
+                    d.shouldShow = false;
                 }
             }
-            return targets;
         }
 
-        public List<PlanetData> PlanetsWithFav()
+        public void FilterCurrentStar()
         {
-            GalaxyData galaxy = GameMain.galaxy;
-            List<PlanetData> targets = new List<PlanetData>(100);
-            for (int i = 0; i < galaxy.starCount; i++)
+            StarData localStar = GameMain.localStar;
+            foreach (PlanetListData d in _allPlanetList)
             {
-                StarData star = galaxy.stars[i];
-                for (int j = 0; j < star.planetCount; j++)
+                if (d.starData == localStar)
                 {
-                    PlanetData planet = star.planets[j];
-                    if (!string.IsNullOrEmpty(planet.overrideName) && planet.overrideName.Contains("★"))
-                    {
-                        targets.Add(planet);
-                    }
+                    d.shouldShow = true;
+                }
+                else
+                {
+                    d.shouldShow = false;
                 }
             }
-            return targets;
+        }
+
+        public void FilterRecentPlanets()
+        {
+            List<PlanetData> recentPlanets = PLFN.recentPlanets;
+            int i = 0;
+            foreach (PlanetListData d in _allPlanetList)
+            {
+                if (recentPlanets.Contains(d.planetData))
+                {
+                    d.shouldShow = true;
+                    d.distanceForSort = i++;
+                }
+                else
+                {
+                    d.shouldShow = false;
+                }
+            }
+        }
+
+        public void FilterPlanetsWithFav()
+        {
+            foreach (PlanetListData d in _allPlanetList)
+            {
+                PlanetData planet = d.planetData;
+                if (!string.IsNullOrEmpty(planet.overrideName) && planet.overrideName.Contains("★"))
+                {
+                    d.shouldShow = true;
+                }
+                else
+                {
+                    d.shouldShow = false;
+                }
+            }
         }
 
 
@@ -594,101 +644,100 @@ namespace PlanetFinderMod
         {
             GalaxyData galaxy = GameMain.galaxy;
             HashSet<int> filterItems = itemSelection.items;
-            List<PlanetData> targets = null;
-            int sortIndex = -1;
-
+            //List<PlanetData> targets = null;
+            foreach (PlanetListData d in _allPlanetList)
+            {
+                d.distanceForSort = -1;
+                d.shouldShow = true; //scope == Scope.Planet
+            }
             //scope
             if (scope == Scope.HasFactory)
             {
-                targets = PlanetsWithFactory();
+                FilterPlanetsWithFactory();
             }
             else if (scope == Scope.CurrentStar)
             {
-                StarData starData = GameMain.localStar;
-                if (starData != null)
-                {
-                    targets = new List<PlanetData>(starData.planets.Length);
-                    targets.AddRange(starData.planets);
-
-                }
+                FilterCurrentStar();
             }
             else if (scope == Scope.Fav)
             {
-                targets = PlanetsWithFav();
+                FilterPlanetsWithFav();
             }
             else if (scope == Scope.Recent)
             {
-                targets = PLFN.recentPlanets;
+                FilterRecentPlanets();
             }
-            else if (scope == Scope.Planet)
-            {
-                targets = new List<PlanetData>(320);
-                for (int i = 0; i < galaxy.starCount; i++)
-                {
-                    StarData star = galaxy.stars[i];
-                    targets.AddRange(star.planets);
-                }
-            }
+            //else if (scope == Scope.Planet)
+            //{
+            //    //all
+            //    foreach (PlanetListData d in _allPlanetList)
+            //    {
+            //        d.shouldShow = true;
+            //    }
+            //}
 
 
             //filter by item
             if (filterItems.Count > 0)
             {
-                List<PlanetData> phasedTargets = new List<PlanetData>(targets != null ? targets.Count : 320);
-                if (targets != null)
+                foreach (PlanetListData d in _allPlanetList)
                 {
-                    foreach (PlanetData planet in targets)
+                    PlanetData planet = d.planetData;
+                    if (d.shouldShow && IsTargetPlanet(planet, filterItems))
                     {
-                        if (IsTargetPlanet(planet, filterItems))
-                        {
-                            phasedTargets.Add(planet);
-                        }
+                        //d.shouldShow = true;
+                    }
+                    else
+                    {
+                        d.shouldShow = false;
                     }
                 }
-                else
-                {
-                    for (int i = 0; i < galaxy.starCount; i++)
-                    {
-                        StarData star = galaxy.stars[i];
-                        for (int j = 0; j < star.planetCount; j++)
-                        {
-                            PlanetData planet = star.planets[j];
-                            if (IsTargetPlanet(planet, filterItems))
-                            {
-                                phasedTargets.Add(planet);
-                            }
-                        }
-                    }
-                }
-
-                targets = phasedTargets;
             }
 
-
-            if (targets != null)
+            //add to list
+            _planetList.Clear();
+            foreach (PlanetListData item in _allPlanetList)
             {
-                foreach (var item in targets)
+                if (item.shouldShow)
                 {
-                    if (scope == Scope.Recent)
-                    {
-                        sortIndex++;
-                    }
-                    AddStore(item, sortIndex);
+                    _planetList.Add(item);
                 }
-                countText.text = "Result: " + targets.Count.ToString();
+            }
+
+            //sort
+            int nearStar = 0;
+            if (GameMain.data?.localPlanet == null)
+            {
+                StarData nearestStar = null;
+                PlanetData nearestPlanet = null;
+                GameMain.data?.GetNearestStarPlanet(ref nearestStar, ref nearestPlanet);
+                if (nearestStar != null)
+                {
+                    nearStar = nearestStar.id;
+                }
+            }
+            foreach (PlanetListData item in _planetList)
+            {
+                SetupDistanceForSort(item, nearStar);
+            }
+            _planetList.Sort((a, b) => a.distanceForSort - b.distanceForSort);
+            planetListView.SetItemCount(_planetList.Count);
+
+            if (_planetList.Count > 0)
+            {
+                countText.text = "Result: " + _planetList.Count.ToString();
             }
             else
             {
                 countText.text = "";
             }
-
-            _planetList.Sort((a, b) => a.distanceForSort - b.distanceForSort);
-            planetListView.SetItemCount(_planetList.Count);
-
         }
 
-        internal void AddStore(PlanetData planet, int sortIndex = -1, StarData star = null)
+        internal void SetupDistanceForSort(PlanetListData d, int nearStar)
         {
+            PlanetData planet=d.planetData;
+            int sortIndex = d.distanceForSort;
+
             string distanceStr = "";
             int distanceForSort;
             int localPlanetId = GameMain.localPlanet != null ? GameMain.localPlanet.id : 0;
@@ -704,17 +753,6 @@ namespace PlanetFinderMod
             }
             else
             {
-                int nearStar = 0;
-                if (GameMain.data?.localPlanet == null)
-                {
-                    StarData nearestStar = null;
-                    PlanetData nearestPlanet = null;
-                    GameMain.data?.GetNearestStarPlanet(ref nearestStar, ref nearestPlanet);
-                    if (nearestStar != null)
-                    {
-                        nearStar = nearestStar.id;
-                    }
-                }
                 float distancef = StarDistance.DistanceFromHere(planet.star.id, nearStar);
                 distanceForSort = (int)(distancef * 10000f) + (planet.star.id * 10) + planet.index;
                 distanceStr = string.Format("  ({0:F1}ly)", distancef);
@@ -725,17 +763,19 @@ namespace PlanetFinderMod
                 distanceForSort = sortIndex;
             }
 
+            d.distanceForSort = distanceForSort;
+            d.distanceStr = distanceStr;
             //int targetItemId = itemSelection.lastSelectedItemId;
 
-            PlanetListData d = new PlanetListData()
-            {
-                planetData = planet,
-                starData = star,
-                distanceForSort = distanceForSort,
-                distanceStr = distanceStr,
-                itemId = targetItemId,
-            };
-            _planetList.Add(d);
+            //PlanetListData d = new PlanetListData()
+            //{
+            //    planetData = planet,
+            //    starData = star,
+            //    distanceForSort = distanceForSort,
+            //    distanceStr = distanceStr,
+            //    itemId = targetItemId,
+            //};
+            //_planetList.Add(d);
 
         }
 

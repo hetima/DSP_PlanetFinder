@@ -16,6 +16,7 @@ namespace PlanetFinderMod
 
         public UIPlanetFinderWindow window;
         public bool firstRefleshed;
+        public PlanetListData listData;
         public PlanetData planetData;
         public StarData starData; //null if target is planet
         public string distanceStr;
@@ -107,7 +108,7 @@ namespace PlanetFinderMod
             if (btn != null)
             {
                 btn.gameObject.name = "locate-btn";
-                rect = Util.NormalizeRectWithTopLeft(btn, 534f - rightPadding, 1f, baseTrans);
+                rect = Util.NormalizeRectWithTopLeft(btn, 538f - rightPadding, 3f, baseTrans);
 
                 //btn.onClick +=
                 btn.tips.tipTitle = "Locate Planet".Translate();
@@ -234,6 +235,7 @@ namespace PlanetFinderMod
 
         public void Init(in PlanetListData d, UIPlanetFinderWindow window_)
         {
+            listData = d;
             firstRefleshed = false;
             window = window_;
             distanceStr = d.distanceStr;
@@ -520,9 +522,10 @@ namespace PlanetFinderMod
             return result;
         }
 
+        public bool disableUIAction = false;
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (eventData.button == PointerEventData.InputButton.Right)
+            if (!disableUIAction && eventData.button == PointerEventData.InputButton.Right)
             {
                 window.ShowMenu(this);
             }
@@ -530,12 +533,18 @@ namespace PlanetFinderMod
 
         public void OnPointerEnter(PointerEventData _eventData)
         {
-            locateBtn.gameObject.SetActive(true);
+            if (!disableUIAction)
+            {
+                locateBtn.gameObject.SetActive(true);
+            }
         }
 
         public void OnPointerExit(PointerEventData _eventData)
         {
-            locateBtn.gameObject.SetActive(false);
+            if (!disableUIAction)
+            {
+                locateBtn.gameObject.SetActive(false);
+            }
         }
 
         public void LockAppearance()

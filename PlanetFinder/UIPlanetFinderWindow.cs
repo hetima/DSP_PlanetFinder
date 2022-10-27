@@ -7,6 +7,7 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using BepInEx;
+using System.ComponentModel.Design;
 
 namespace PlanetFinderMod
 {
@@ -393,6 +394,7 @@ namespace PlanetFinderMod
 
         protected override void _OnClose()
         {
+            popupMenuBase.SetActive(false);
             searchField.onValueChanged.RemoveAllListeners();
             searchField.onEndEdit.RemoveAllListeners();
             if (searchField.isFocused)
@@ -412,9 +414,9 @@ namespace PlanetFinderMod
                 {
                     PLFN._configWin._Close();
                 }
-                else if (menuComboBox.isDroppedDown)
+                else if (popupMenuBase.activeSelf)
                 {
-                    menuComboBox.isDroppedDown = false;
+                    popupMenuBase.SetActive(false);
                 }
                 else
                 {
@@ -448,10 +450,13 @@ namespace PlanetFinderMod
             }
 
 
-            if (!menuComboBox.isDroppedDown && menuTarget != null)
+            if (popupMenuBase.activeSelf && (Input.GetKeyDown(KeyCode.Mouse0) || Input.GetKeyDown(KeyCode.Mouse1) || Input.GetKeyDown(KeyCode.Mouse2)))
             {
-                menuTarget.UnlockAppearance();
-                menuTarget = null;
+                Camera worldCamera = UIRoot.instance.overlayCanvas.worldCamera;
+                if (!RectTransformUtility.RectangleContainsScreenPoint(popupMenuBase.transform as RectTransform, Input.mousePosition, worldCamera))
+                {
+                    popupMenuBase.SetActive(false);
+                }
             }
         }
 
@@ -880,145 +885,141 @@ namespace PlanetFinderMod
 
         //menu
 
-        public UIComboBox menuComboBox;
-        UIPlanetFinderListItem menuTarget;
         public enum EMenuCommand
         {
-            OpenStarmap = 0,
+            Close = 0,
+            OpenStarmap,
             OpenLSTM,
             SetCruiseAssist,
         }
 
-        public void ShowMenu(UIPlanetFinderListItem item)
+        public GameObject popupMenuBase;
+        public UIPlanetFinderListItem popupMenuListItem;
+        UIPlanetFinderListItem menuTarget;
+
+        public const float popupMenuTopMargin = 30f;
+
+        public void CreateMenuBox()
         {
-            if (menuComboBox.isDroppedDown)
+            UIItemTip uiitemTip = GameObject.Instantiate<UIItemTip>(Configs.builtin.uiItemTipPrefab, windowTrans);
+            (uiitemTip.transform as RectTransform).sizeDelta = new Vector2(568f, 90f);
+            popupMenuBase = uiitemTip.gameObject;
+            foreach (Transform child in uiitemTip.transform)
             {
-                menuComboBox.isDroppedDown = false;
-                return;
-            }
-
-            RectTransform rect = menuComboBox.m_DropDownList;
-            //anchorMax = new Vector2(1f, 0f);
-            //anchorMin = new Vector2(0f, 0f);
-            //pivot = new Vector2(0f, 1f);
-
-            UIRoot.ScreenPointIntoRect(Input.mousePosition, rect.parent as RectTransform, out Vector2 pos);
-            pos.x = pos.x + 20f;
-            pos.y = pos.y + 30f;
-            menuComboBox.m_DropDownList.anchoredPosition = pos;
-
-            menuTarget = item;
-            menuTarget.LockAppearance();
-            RefreshMenuBox();
-            menuComboBox.OnPopButtonClick();
-        }
-
-        internal void RefreshMenuBox()
-        {
-            List<string> items = menuComboBox.Items;
-            List<int> itemsData = menuComboBox.ItemsData;
-            items.Clear();
-            itemsData.Clear();
-
-            int itemCount = 1;
-            items.Add("Show In Starmap");
-            itemsData.Add((int)EMenuCommand.OpenStarmap);
-
-            if (PLFN.aLSTMIntg.canOpenPlanetId && PLFN.integrationWithLSTM.Value)
-            {
-                items.Add("Open LSTM");
-                itemsData.Add((int)EMenuCommand.OpenLSTM);
-                itemCount++;
-            }
-            if (PLFN.aCruiseAssistIntg.canSelectPlanet && PLFN.integrationWithCruiseAssist.Value)
-            {
-                items.Add("CruiseAssist");
-                itemsData.Add((int)EMenuCommand.SetCruiseAssist);
-                itemCount++;
-            }
-
-
-            menuComboBox.DropDownCount = itemCount;
-
-        }
-
-
-        public void OnMenuBoxItemIndexChange()
-        {
-            if (_eventLock)
-            {
-                return;
-            }
-            int num = menuComboBox.itemIndex;
-            if (num < 0) //recursion
-            {
-                return;
-            }
-            if (menuTarget != null)
-            {
-                EMenuCommand itemData = (EMenuCommand)menuComboBox.ItemsData[num];
-                switch (itemData)
+                if (child.name == "bg" || child.name == "border" || child.name == "shadow")
                 {
-                    case EMenuCommand.OpenStarmap:
-                        PLFN.LocatePlanet(menuTarget.planetData?.id ?? 0);
-                        break;
-                    case EMenuCommand.OpenLSTM:
-                        PLFN.aLSTMIntg.OpenPlanetId(menuTarget.planetData?.id ?? 0);
-                        break;
-                    case EMenuCommand.SetCruiseAssist:
-                        PLFN.aCruiseAssistIntg.SelectPlanetOrStar(menuTarget.planetData, menuTarget.planetData.star);
-                        break;
-                    default:
-                        break;
+                    continue;
                 }
 
-                menuTarget.UnlockAppearance();
-                menuTarget = null;
+                GameObject.Destroy(child.gameObject);
             }
-
-
-            //UIRealtimeTip.Popup("" + itemData, false, 0);
-            menuComboBox.itemIndex = -1; //recursion
-        }
-
-        internal void CreateMenuBox()
-        {
-            // Main Button : Image,Button
-            // -Pop sign : Image
-            // -Text : Text
-            // Dropdown List ScrollBox : ScrollRect
-
-            UIStatisticsWindow statisticsWindow = UIRoot.instance.uiGame.statWindow;
-            UIComboBox src = statisticsWindow.productAstroBox;
-            UIComboBox box = GameObject.Instantiate<UIComboBox>(src, windowTrans);
-            box.gameObject.name = "menu-box";
-
-            RectTransform boxRect = Util.NormalizeRectWithTopLeft(box, 20f, 20f, windowTrans);
-
-            RectTransform btnRect = box.transform.Find("Main Button")?.transform as RectTransform;
-            if (btnRect != null)
+            foreach (Component child in uiitemTip.transform.GetComponents<Component>())
             {
-                btnRect.pivot = new Vector2(1f, 0f);
-                btnRect.anchorMax = Vector2.zero;
-                btnRect.anchorMin = Vector2.zero;
-                btnRect.anchoredPosition = new Vector2(boxRect.sizeDelta.x, 0f);
-                btnRect.sizeDelta = new Vector2(20, boxRect.sizeDelta.y);
-
-                Button btn = btnRect.GetComponent<Button>();
-                btnRect.Find("Text")?.gameObject.SetActive(false);
-                btnRect.gameObject.SetActive(false);
+                if (child.GetType() == typeof(RectTransform))
+                {
+                    continue;
+                }
+                GameObject.Destroy(child);
             }
 
-            box.onItemIndexChange.AddListener(OnMenuBoxItemIndexChange);
-            menuComboBox = box;
+            //close
+            searchFieldClearBtn = Util.MakeSmallTextButton("X", 18f, 20f);
+            searchFieldClearBtn.gameObject.name = "close-btn";
+            Util.NormalizeRectWithTopLeft(searchFieldClearBtn, 542f, 6f, popupMenuBase.transform);
+            searchFieldClearBtn.onClick += OnMenuSelect;
+            searchFieldClearBtn.gameObject.SetActive(true);
 
-            //Dropdown List ScrollBox
-            RectTransform vsRect = menuComboBox.m_Scrollbar.transform as RectTransform;
-            vsRect.sizeDelta = new Vector2(0, vsRect.sizeDelta.y);
+            //OpenStarmap btn
+            UIButton btn = Util.MakeSmallTextButton("Locate", 44f, 20f);
+            btn.gameObject.name = "locate-d-btn";
+            Util.NormalizeRectWithTopLeft(btn, 32f, 60f, popupMenuBase.transform);
+            btn.onClick += OnMenuSelect;
+            btn.data = (int)EMenuCommand.OpenStarmap;
+            btn.gameObject.SetActive(true);
 
-            RefreshMenuBox();
+            float x_ = 32f;
+            //OpenLSTM
+            if (PLFN.aLSTMIntg.canOpenPlanetId && PLFN.integrationWithLSTM.Value)
+            {
+                btn = Util.MakeSmallTextButton("LSTM", 40f, 20f);
+                btn.gameObject.name = "filter-s-btn";
+                Util.NormalizeRectWithTopLeft(btn, x_, 8f, popupMenuBase.transform);
+                btn.onClick += OnMenuSelect;
+                btn.data = (int)EMenuCommand.OpenLSTM;
+                btn.gameObject.SetActive(true);
+                x_ += 50f;
+            }
 
+            //CruiseAssist
+            if (PLFN.aCruiseAssistIntg.canSelectPlanet && PLFN.integrationWithCruiseAssist.Value)
+            {
+                btn = Util.MakeSmallTextButton("CruiseAssist", 60f, 20f);
+                btn.gameObject.name = "filter-item-btn";
+                Util.NormalizeRectWithTopLeft(btn, x_, 8f, popupMenuBase.transform);
+                btn.onClick += OnMenuSelect;
+                btn.data = (int)EMenuCommand.SetCruiseAssist;
+                btn.gameObject.SetActive(true);
+            }
+
+            UIPlanetFinderListItem baseItem = UIPlanetFinderListItem.CreateListViewPrefab();
+            //Destroy(baseItem.transform.Find("locate-btn").gameObject);
+            (baseItem.transform as RectTransform).sizeDelta = new Vector2(566f, 24f);
+            (baseItem.baseObj.transform as RectTransform).sizeDelta = new Vector2(566f, 24f);
+            popupMenuListItem = baseItem;
+            Util.NormalizeRectWithTopLeft(popupMenuListItem, 1f, popupMenuTopMargin, popupMenuBase.transform);
+            popupMenuBase.SetActive(false);
         }
 
+        public void OnMenuSelect(int obj)
+        {
+            popupMenuBase.SetActive(false);
+            if (_eventLock || menuTarget == null)
+            {
+                return;
+            }
+
+            switch ((EMenuCommand)obj)
+            {
+                case EMenuCommand.OpenStarmap:
+                    PLFN.LocatePlanet(menuTarget.planetData?.id ?? 0);
+                    break;
+                case EMenuCommand.OpenLSTM:
+                    PLFN.aLSTMIntg.OpenPlanetId(menuTarget.planetData?.id ?? 0);
+                    break;
+                case EMenuCommand.SetCruiseAssist:
+                    PLFN.aCruiseAssistIntg.SelectPlanetOrStar(menuTarget.planetData, menuTarget.planetData.star);
+                    break;
+                default:
+                    break;
+            }
+            menuTarget = null;
+        }
+
+        public void ShowMenu(UIPlanetFinderListItem item)
+        {
+            if (popupMenuBase.activeSelf)
+            {
+                popupMenuBase.SetActive(false);
+                return;
+            }
+            if (item == popupMenuListItem)
+            {
+                return;
+            }
+
+            menuTarget = item;
+            ////menuTarget.LockAppearance();
+            popupMenuListItem.Init(menuTarget.listData, this);
+            popupMenuListItem.disableUIAction = true;
+            Vector3 pos = menuTarget.transform.position;
+
+            popupMenuBase.transform.position = pos;
+            Vector2 localPos = (popupMenuBase.transform as RectTransform).localPosition;
+            localPos.x -= 1f;
+            localPos.y += popupMenuTopMargin;
+            (popupMenuBase.transform as RectTransform).localPosition = localPos;
+            popupMenuBase.SetActive(true);
+
+        }
     }
 }

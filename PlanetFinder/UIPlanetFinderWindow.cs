@@ -835,15 +835,16 @@ namespace PlanetFinderMod
                 distanceForSort = 0;
                 distanceStr = "";
             }
-            else if (localPlanetId / 100 == planet.id / 100)
+            else
+            if (localPlanetId / 100 == planet.id / 100)
             {
-                distanceForSort = planet.index;
+                distanceForSort = planet.index + 40;
                 distanceStr = "";
             }
             else
             {
                 float distancef = StarDistance.DistanceFromHere(planet.star.id, nearStar);
-                distanceForSort = (int)(distancef * 10000f) + (planet.star.id * 10) + planet.index;
+                distanceForSort = (int)(distancef * 10000f) + (planet.star.id * 100) + planet.index;
                 distanceStr = string.Format("  ({0:F1}ly)", distancef);
             }
 

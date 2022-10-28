@@ -6,8 +6,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
-using BepInEx;
-using System.ComponentModel.Design;
 
 namespace PlanetFinderMod
 {
@@ -225,7 +223,7 @@ namespace PlanetFinderMod
             scopeButtons.Add(AddScope("All Planet", (int)Scope.Planet));
             scopeButtons.Add(AddScope("Current Star", (int)Scope.CurrentStar));
             scopeButtons.Add(AddScope("Has Factory", (int)Scope.HasFactory));
-            //scopeButtons.Add(AddScope("★", (int)Scope.Fav));
+            scopeButtons.Add(AddScope("★", (int)Scope.Fav));
             scopeButtons.Add(AddScope("Recent", (int)Scope.Recent));
             scope = Scope.Planet;
             foreach (var btn in scopeButtons)
@@ -689,12 +687,70 @@ namespace PlanetFinderMod
             }
         }
 
+        public bool IsFavPlanet(PlanetData planetData)
+        {
+            string name = planetData.overrideName;
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+            if (name.Contains("★"))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public void SetFavPlanet(PlanetData planetData, bool flag)
+        {
+            if (flag)
+            {
+                if (IsFavPlanet(planetData))
+                {
+                    return;
+                }
+                string newName = planetData.displayName;
+                newName += "★";
+                planetData.overrideName = newName;
+
+                GameMain.gameScenario?.NotifyOnPlanetNameChange();
+                planetData.NotifyOnDisplayNameChange();
+                GameMain.galaxy.NotifyAstroNameChange();
+            }
+            else
+            {
+                if (!IsFavPlanet(planetData))
+                {
+                    return;
+                }
+                string newName = planetData.overrideName;
+                newName = newName.Replace("★", "").Trim();
+                if (string.Equals(newName, planetData.overrideName))
+                {
+                    return;
+                }
+
+                if (string.Equals(newName, planetData.name))
+                {
+                    planetData.overrideName = "";
+                }
+                else
+                {
+                    planetData.overrideName = newName;
+                }
+                GameMain.gameScenario?.NotifyOnPlanetNameChange();
+                planetData.NotifyOnDisplayNameChange();
+                GameMain.galaxy.NotifyAstroNameChange();
+            }
+
+        }
+
         public void FilterPlanetsWithFav()
         {
             foreach (PlanetListData d in _allPlanetList)
             {
                 PlanetData planet = d.planetData;
-                if (!string.IsNullOrEmpty(planet.overrideName) && planet.overrideName.Contains("★"))
+                if (IsFavPlanet(planet))
                 {
                     d.shouldShow = true;
                 }
@@ -877,13 +933,15 @@ namespace PlanetFinderMod
         {
             Close = 0,
             OpenStarmap,
+            Fav,
             OpenLSTM,
             SetCruiseAssist,
         }
 
         public GameObject popupMenuBase;
         public UIPlanetFinderListItem popupMenuListItem;
-        UIPlanetFinderListItem menuTarget;
+        public UIPlanetFinderListItem menuTarget;
+        public UIButton favBtn;
 
         public const float popupMenuTopMargin = 30f;
 
@@ -917,10 +975,17 @@ namespace PlanetFinderMod
             searchFieldClearBtn.onClick += OnMenuSelect;
             searchFieldClearBtn.gameObject.SetActive(true);
 
+            //fav
+            favBtn = Util.MakeHiliteTextButton("★", 20f, 20f);
+            favBtn.onClick += OnMenuSelect;
+            favBtn.data = (int)EMenuCommand.Fav;
+            RectTransform btnRect = Util.NormalizeRectWithTopLeft(favBtn, 32f, 60f, popupMenuBase.transform);
+
+
             //OpenStarmap btn
             UIButton btn = Util.MakeSmallTextButton("Locate", 44f, 20f);
             btn.gameObject.name = "locate-d-btn";
-            Util.NormalizeRectWithTopLeft(btn, 32f, 60f, popupMenuBase.transform);
+            Util.NormalizeRectWithTopLeft(btn, 60f, 60f, popupMenuBase.transform);
             btn.onClick += OnMenuSelect;
             btn.data = (int)EMenuCommand.OpenStarmap;
             btn.gameObject.SetActive(true);
@@ -949,6 +1014,7 @@ namespace PlanetFinderMod
                 btn.gameObject.SetActive(true);
             }
 
+
             UIPlanetFinderListItem baseItem = UIPlanetFinderListItem.CreateListViewPrefab();
             //Destroy(baseItem.transform.Find("locate-btn").gameObject);
             (baseItem.transform as RectTransform).sizeDelta = new Vector2(566f, 24f);
@@ -976,6 +1042,12 @@ namespace PlanetFinderMod
                     break;
                 case EMenuCommand.SetCruiseAssist:
                     PLFN.aCruiseAssistIntg.SelectPlanetOrStar(menuTarget.planetData, menuTarget.planetData.star);
+                    break;
+                case EMenuCommand.Fav:
+                    SetFavPlanet(menuTarget.planetData, !IsFavPlanet(menuTarget.planetData));
+                    favBtn.highlighted = IsFavPlanet(menuTarget.planetData);
+                    menuTarget.SetUpDisplayName();
+                    popupMenuListItem.SetUpDisplayName();
                     break;
                 default:
                     break;
@@ -1006,6 +1078,8 @@ namespace PlanetFinderMod
             localPos.x -= 1f;
             localPos.y += popupMenuTopMargin;
             (popupMenuBase.transform as RectTransform).localPosition = localPos;
+
+            favBtn.highlighted = IsFavPlanet(menuTarget.planetData);
             popupMenuBase.SetActive(true);
 
         }

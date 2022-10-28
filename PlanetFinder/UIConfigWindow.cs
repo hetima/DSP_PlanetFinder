@@ -132,16 +132,21 @@ namespace PlanetFinderMod
             rect = MyCheckBox.CreateCheckBox(PLFN.showPowerState, "Show Power State In List");
             AddElement(rect, 26f);
             rect = MyCheckBox.CreateCheckBox(PLFN.showPrefix, "Show [GAS] [TL] Prefix");
-            AddElement(rect, 26f); x_ = 290f;
+            AddElement(rect, 26f);
+            
+            
+            x_ = 290f;
             y_ = 0f;
 
+            rect = MyCheckBox.CreateCheckBox(PLFN.showFavButtonInStarmap, "Show Fav Button In Starmap");
+            AddElement(rect, 26f);
 
             if (PLFN.aDSPStarMapMemoIntg.canGetSignalIconId)
             {
                 rect = MyCheckBox.CreateCheckBox(PLFN.integrationWithDSPStarMapMemo, "Integration With DSPStarMapMemo");
                 AddElement(rect, 22f);
                 x_ += 32f;
-                txt = CreateText("Display Icons Set By DSPStarMapMemo");
+                txt = CreateText("Display Icons / Search Memo");
                 txt.fontSize = 14;
                 AddElement(txt.rectTransform, 24f);
                 x_ -= 32f;
@@ -152,7 +157,7 @@ namespace PlanetFinderMod
                 rect = MyCheckBox.CreateCheckBox(PLFN.integrationWithLSTM, "Integration With LSTM");
                 AddElement(rect, 22f);
                 x_ += 32f;
-                txt = CreateText("Open LSTM From Context Menu");
+                txt = CreateText("Open LSTM From Context Panel");
                 txt.fontSize = 14;
                 AddElement(txt.rectTransform, 24f);
                 x_ -= 32f;
@@ -162,7 +167,7 @@ namespace PlanetFinderMod
                 rect = MyCheckBox.CreateCheckBox(PLFN.integrationWithCruiseAssist, "Integration With CruiseAssist");
                 AddElement(rect, 22f);
                 x_ += 32f;
-                txt = CreateText("Set CruiseAssist From Context Menu");
+                txt = CreateText("Set CruiseAssist From Context Panel");
                 txt.fontSize = 14;
                 AddElement(txt.rectTransform, 24f);
                 x_ -= 32f;

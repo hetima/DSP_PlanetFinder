@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using static PlanetFinderMod.UIPlanetFinderWindow;
 
 namespace PlanetFinderMod
 {
@@ -27,6 +28,7 @@ namespace PlanetFinderMod
         public static ConfigEntry<KeyboardShortcut> mainWindowHotkey;
         public static ConfigEntry<bool> showButtonInMainPanel;
         public static ConfigEntry<bool> showButtonInStarmap;
+        public static ConfigEntry<bool> showFavButtonInStarmap;
         public static ConfigEntry<bool> showPowerState;
         public static ConfigEntry<bool> showPrefix;
         public static ConfigEntry<string> gasGiantPrefix;
@@ -50,6 +52,8 @@ namespace PlanetFinderMod
                 "show open/close button in main panel");
             showButtonInStarmap = Config.Bind("UI", "showButtonInStarmap", true,
                 "show open/close button in starmap");
+            showFavButtonInStarmap = Config.Bind("UI", "showFavButtonInStarmap", false,
+                "show toggle favorited button in starmap planet detail panel");
             showPowerState = Config.Bind("UI", "showPowerState", true,
                 "show power consumption");
             showPrefix = Config.Bind("UI", "showPrefix", true,
@@ -254,6 +258,7 @@ namespace PlanetFinderMod
 
         public static GameObject panelButtonGO;
         public static GameObject starmapButtonGO;
+        public static GameObject favBtnGO;
         public static void CreateUI()
         {
             //main panel button
@@ -311,6 +316,34 @@ namespace PlanetFinderMod
                 };
             }
 
+            //AddFavButtonToStarmap
+            UIPlanetDetail planetDetail = UIRoot.instance.uiGame.planetDetail;
+            parent = planetDetail?.transform;
+            if (parent != null)
+            {
+                UIButton favBtn = Util.MakeHiliteTextButton("★", 18f, 18f);
+                favBtn.onClick += OnStarmapFavButtonClick;
+                RectTransform btnRect = Util.NormalizeRectWithTopLeft(favBtn, 218f, 38f, parent);
+                favBtnGO = favBtn.gameObject;
+                favBtnGO.name = "planetfinder-fav";
+                favBtnGO.SetActive(showFavButtonInStarmap.Value);
+                showFavButtonInStarmap.SettingChanged += (sender, args) => {
+                    favBtnGO.SetActive(showFavButtonInStarmap.Value);
+                };
+            }
+
+        }
+
+        public static void OnStarmapFavButtonClick(int obj)
+        {
+            UIPlanetDetail planetDetail = UIRoot.instance.uiGame.planetDetail;
+            PlanetData planetData = planetDetail.planet;
+            PLFN.SetFavPlanet(planetData, !PLFN.IsFavPlanet(planetData));
+            favBtnGO.GetComponent<UIButton>().highlighted = PLFN.IsFavPlanet(planetData);
+            if (!planetDetail.nameInput.isFocused)
+            {
+                planetDetail.nameInput.text = planetDetail.planet.displayName;
+            }
         }
 
         public static void OnShowWindowButtonClick(int obj)
@@ -355,6 +388,15 @@ namespace PlanetFinderMod
                 AddRecentPlanet(planet);
             }
 
+            //OnPlanetDataSet と _OnUpdate(30フレームおき)
+            [HarmonyPostfix, HarmonyPatch(typeof(UIPlanetDetail), "RefreshDynamicProperties")]
+            public static void UIPlanetDetail_RefreshDynamicProperties(UIPlanetDetail __instance)
+            {
+                if (showFavButtonInStarmap.Value && favBtnGO.activeSelf)
+                {
+                    favBtnGO.GetComponent<UIButton>().highlighted = PLFN.IsFavPlanet(__instance.planet);
+                }
+            }
         }
 
     }

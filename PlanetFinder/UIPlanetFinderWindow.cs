@@ -279,8 +279,8 @@ namespace PlanetFinderMod
             searchField.gameObject.name = "search-field";
             Destroy(searchField.GetComponent<UIButton>());
             searchField.GetComponent<Image>().color = new Color(1f, 1f, 1f, 0.05f);
-            rect = Util.NormalizeRectWithTopLeft(searchField, 400f, -4f, contentTrans);
-            rect.sizeDelta = new Vector2(180, rect.sizeDelta.y);
+            rect = Util.NormalizeRectWithTopLeft(searchField, 370f, -4f, contentTrans);
+            rect.sizeDelta = new Vector2(210, rect.sizeDelta.y);
             searchField.textComponent.fontSize = 16;
 
             //searchFieldClearBtn

@@ -649,9 +649,18 @@ namespace PlanetFinderMod
         public void FilterCurrentStar()
         {
             StarData localStar = GameMain.localStar;
+            int starId;
+            if (localStar != null)
+            {
+                starId = localStar.id;
+            }
+            else
+            {
+                starId = 0;
+            }
             foreach (PlanetListData d in _allPlanetList)
             {
-                if (d.starData == localStar)
+                if (d.planetData.id / 100 == starId)
                 {
                     d.shouldShow = true;
                 }

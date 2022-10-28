@@ -6,7 +6,7 @@ This mod adds a window that lists the planets and allows you to search by criter
 
 It can be opened from the button that will be added to the panel at the bottom left of the game screen and the bottom right of the star map. It can also be opened with a shortcut (default LCtrl+F). Whether the button is shown or not, and the shortcut can be customized by clicking on the gear icon at the top of the main window.
 
-The scope of the list can be narrowed down by "all planets", "current star system", "planets where facilities are being built", and "recently visited planets". From there, you can further filter by which resources are present.  
+The scope of the list can be narrowed down by "all planets", "current star system", "planets where facilities are being built", "favorited" and "recently visited planets". From there, you can further filter by planet name and which resources are present.  
 Resources can be multi-selected by shift-clicking, narrowing down the list of planets that have all the resources.
 
 The display area shows the name of the planet, distance from the current star system, and the actual number of selected resources and approximate number of chunks of veins. The power status can also be displayed and switched to resource information by pressing the Tab key. If the electricity supply-demand ratio exceeds 90%, an orange display warns.  
@@ -16,6 +16,7 @@ Clicking the arrow button displays the planet in the starmap view.
 
 The resource calculation method has changed since version 0.4.1. Information on all planets cannot be retrieved immediately after loading. Information acquisition begins when the Planet Finder window is first opened. This will take some time. Progress will be displayed as the window title until all information has been calculated
 
+Favorite feature adds/removes the "★" character directly to the planet name. Manually adding or removing the "★" character will affect this.
 
 ![screen shot](https://raw.githubusercontent.com/hetima/DSP_PlanetFinder/main/screen.jpg)
 
@@ -24,7 +25,7 @@ The resource calculation method has changed since version 0.4.1. Information on 
 
 ゲーム画面左下のパネルと星図ビューの右下に追加されるボタンから開くことができます。ショートカットでも開くことができます(デフォルトLCtrl+F)。ボタンを表示するかどうか、ショートカットのカスタマイズはメインウィンドウ上部の歯車アイコンから変更できます。
 
-一覧表示する範囲を「すべての惑星」「現在の星系」「施設を建てている惑星」「最近訪れた惑星」で絞り込みます。そこから更にどの資源が存在するかでフィルタできます。  
+一覧表示する範囲を「すべての惑星」「現在の星系」「施設を建てている惑星」「お気に入り」「最近訪れた惑星」で絞り込みます。そこから更に惑星の名前や資源でフィルタできます。  
 資源はシフトクリックすると複数選択することができ、すべての資源が揃った惑星を絞り込みます。
 
 検索結果表示部分には惑星の名前、現在の星系からの距離、選択した資源の実数とおおまかな鉱脈の数が表示されます。電力の状態も表示でき、Tabキーを押すことで資源の情報と切り替わります。電力需給率が90%を超えていたらオレンジ色の表示で警告します。  
@@ -34,8 +35,15 @@ The resource calculation method has changed since version 0.4.1. Information on 
 
 バージョン0.4.1から資源の算出方法が変わりました。ロード直後はすべての惑星の情報を取得することができません。最初にPlanet Finderのウィンドウを開いた時点で情報取得を始めます。これにはしばらく時間がかかります。全情報の算出が完了するまでウィンドウタイトルに進捗が表示されます。
 
+「お気に入り」機能は惑星名に「★」文字を直接付加します。手動で「★」文字を付加・削除すると「お気に入り」機能に影響します。
 
 ## Release Notes
+
+### v1.0.0
+- Added name search
+- Added favorite planet feature
+- Renewal context panel by right click
+- Improve performance
 
 ### v0.4.3
 - Added detailed initializing progress display

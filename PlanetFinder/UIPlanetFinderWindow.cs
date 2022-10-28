@@ -969,11 +969,11 @@ namespace PlanetFinderMod
             }
 
             //close
-            searchFieldClearBtn = Util.MakeSmallTextButton("X", 18f, 20f);
-            searchFieldClearBtn.gameObject.name = "close-btn";
-            Util.NormalizeRectWithTopLeft(searchFieldClearBtn, 542f, 6f, popupMenuBase.transform);
-            searchFieldClearBtn.onClick += OnMenuSelect;
-            searchFieldClearBtn.gameObject.SetActive(true);
+            UIButton btn = Util.MakeSmallTextButton("X", 18f, 20f);
+            btn.gameObject.name = "close-btn";
+            Util.NormalizeRectWithTopLeft(btn, 542f, 6f, popupMenuBase.transform);
+            btn.onClick += OnMenuSelect;
+            btn.gameObject.SetActive(true);
 
             //fav
             favBtn = Util.MakeHiliteTextButton("★", 20f, 20f);
@@ -983,7 +983,7 @@ namespace PlanetFinderMod
 
 
             //OpenStarmap btn
-            UIButton btn = Util.MakeSmallTextButton("Locate", 44f, 20f);
+            btn = Util.MakeSmallTextButton("Locate", 44f, 20f);
             btn.gameObject.name = "locate-d-btn";
             Util.NormalizeRectWithTopLeft(btn, 60f, 60f, popupMenuBase.transform);
             btn.onClick += OnMenuSelect;

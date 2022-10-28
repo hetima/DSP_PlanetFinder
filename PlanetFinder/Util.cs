@@ -339,5 +339,42 @@ namespace PlanetFinderMod
             return btn;
         }
 
+        public static UIButton MakeHiliteTextButton(string label, float width = 0f, float height = 0f)
+        {
+            UIDESwarmPanel swarmPanel = UIRoot.instance.uiGame.dysonEditor.controlPanel.hierarchy.swarmPanel;
+            UIButton src = swarmPanel.orbitButtons[0];
+            UIButton btn = GameObject.Instantiate<UIButton>(src);
+            // btn.transitions[0] btn btn.transitions[1]==text btn.transitions[2]==frame
+            if (btn.transitions.Length >= 2)
+            {
+                btn.transitions[0].normalColor = new Color(0.1f, 0.1f, 0.1f, 0.68f);
+                btn.transitions[0].highlightColorOverride = new Color(0.9906f, 0.5897f, 0.3691f, 0.4f);
+                btn.transitions[1].normalColor = new Color(1f, 1f, 1f, 0.6f);
+                btn.transitions[1].highlightColorOverride = new Color(0.2f, 0.1f, 0.1f, 0.9f);
+            }
+            Text btnText = btn.transform.Find("Text").GetComponent<Text>();
+            btnText.text = label;
+            if (btnText.font.name == "MPMK85") //JP MOD
+            {
+                btnText.fontSize = 16;
+            }
+            else // "DIN"
+            {
+                btnText.fontSize = 14;
+            }
+            btn.transform.Find("frame")?.gameObject.SetActive(false);
+            RectTransform btnRect = btn.transform as RectTransform;
+            if (width==0f || height == 0f)
+            {
+                btnRect.sizeDelta = new Vector2(btnText.preferredWidth + 14f, 22f);
+            }
+            else
+            {
+                btnRect.sizeDelta = new Vector2(width, height);
+            }
+            //(btn.transform.Find("frame").transform as RectTransform).sizeDelta = btnRect.sizeDelta;
+
+            return btn;
+        }
     }
 }

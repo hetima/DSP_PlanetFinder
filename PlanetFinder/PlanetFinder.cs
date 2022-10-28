@@ -160,6 +160,65 @@ namespace PlanetFinderMod
             }
         }
 
+
+        public static bool IsFavPlanet(PlanetData planetData)
+        {
+            string name = planetData.overrideName;
+            if (string.IsNullOrEmpty(name))
+            {
+                return false;
+            }
+            if (name.Contains("★"))
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public static void SetFavPlanet(PlanetData planetData, bool flag)
+        {
+            if (flag)
+            {
+                if (IsFavPlanet(planetData))
+                {
+                    return;
+                }
+                string newName = planetData.displayName;
+                newName += "★";
+                planetData.overrideName = newName;
+
+                GameMain.gameScenario?.NotifyOnPlanetNameChange();
+                planetData.NotifyOnDisplayNameChange();
+                GameMain.galaxy.NotifyAstroNameChange();
+            }
+            else
+            {
+                if (!IsFavPlanet(planetData))
+                {
+                    return;
+                }
+                string newName = planetData.overrideName;
+                newName = newName.Replace("★", "").Trim();
+                if (string.Equals(newName, planetData.overrideName))
+                {
+                    return;
+                }
+
+                if (string.Equals(newName, planetData.name))
+                {
+                    planetData.overrideName = "";
+                }
+                else
+                {
+                    planetData.overrideName = newName;
+                }
+                GameMain.gameScenario?.NotifyOnPlanetNameChange();
+                planetData.NotifyOnDisplayNameChange();
+                GameMain.galaxy.NotifyAstroNameChange();
+            }
+
+        }
+
         private void Update()
         {
             if (!GameMain.isRunning || GameMain.isPaused || GameMain.instance.isMenuDemo)

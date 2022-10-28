@@ -687,70 +687,12 @@ namespace PlanetFinderMod
             }
         }
 
-        public bool IsFavPlanet(PlanetData planetData)
-        {
-            string name = planetData.overrideName;
-            if (string.IsNullOrEmpty(name))
-            {
-                return false;
-            }
-            if (name.Contains("★"))
-            {
-                return true;
-            }
-            return false;
-        }
-
-        public void SetFavPlanet(PlanetData planetData, bool flag)
-        {
-            if (flag)
-            {
-                if (IsFavPlanet(planetData))
-                {
-                    return;
-                }
-                string newName = planetData.displayName;
-                newName += "★";
-                planetData.overrideName = newName;
-
-                GameMain.gameScenario?.NotifyOnPlanetNameChange();
-                planetData.NotifyOnDisplayNameChange();
-                GameMain.galaxy.NotifyAstroNameChange();
-            }
-            else
-            {
-                if (!IsFavPlanet(planetData))
-                {
-                    return;
-                }
-                string newName = planetData.overrideName;
-                newName = newName.Replace("★", "").Trim();
-                if (string.Equals(newName, planetData.overrideName))
-                {
-                    return;
-                }
-
-                if (string.Equals(newName, planetData.name))
-                {
-                    planetData.overrideName = "";
-                }
-                else
-                {
-                    planetData.overrideName = newName;
-                }
-                GameMain.gameScenario?.NotifyOnPlanetNameChange();
-                planetData.NotifyOnDisplayNameChange();
-                GameMain.galaxy.NotifyAstroNameChange();
-            }
-
-        }
-
         public void FilterPlanetsWithFav()
         {
             foreach (PlanetListData d in _allPlanetList)
             {
                 PlanetData planet = d.planetData;
-                if (IsFavPlanet(planet))
+                if (PLFN.IsFavPlanet(planet))
                 {
                     d.shouldShow = true;
                 }
@@ -1044,10 +986,10 @@ namespace PlanetFinderMod
                     PLFN.aCruiseAssistIntg.SelectPlanetOrStar(menuTarget.planetData, menuTarget.planetData.star);
                     break;
                 case EMenuCommand.Fav:
-                    SetFavPlanet(menuTarget.planetData, !IsFavPlanet(menuTarget.planetData));
-                    favBtn.highlighted = IsFavPlanet(menuTarget.planetData);
+                    PLFN.SetFavPlanet(menuTarget.planetData, !PLFN.IsFavPlanet(menuTarget.planetData));
+                    favBtn.highlighted = PLFN.IsFavPlanet(menuTarget.planetData);
                     menuTarget.SetUpDisplayName();
-                    popupMenuListItem.SetUpDisplayName();
+                    //popupMenuListItem.SetUpDisplayName(); //すぐ閉じるので不要
                     break;
                 default:
                     break;
@@ -1079,7 +1021,7 @@ namespace PlanetFinderMod
             localPos.y += popupMenuTopMargin;
             (popupMenuBase.transform as RectTransform).localPosition = localPos;
 
-            favBtn.highlighted = IsFavPlanet(menuTarget.planetData);
+            favBtn.highlighted = PLFN.IsFavPlanet(menuTarget.planetData);
             popupMenuBase.SetActive(true);
 
         }

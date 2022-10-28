@@ -708,7 +708,8 @@ namespace PlanetFinderMod
         {
             GalaxyData galaxy = GameMain.galaxy;
             HashSet<int> filterItems = itemSelection.items;
-            //List<PlanetData> targets = null;
+
+            planetListView.SetItemCount(0);
             foreach (PlanetListData d in _allPlanetList)
             {
                 d.distanceForSort = -1;

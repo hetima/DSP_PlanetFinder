@@ -15,7 +15,7 @@ Right-clicking a row brings up a panel offering various functions.
 
 ## Attention
 
-The resource calculation method has changed since version 0.4.1. Information on all planets cannot be retrieved immediately after loading. Information acquisition begins when the Planet Finder window is first opened. This will take some time. Progress will be displayed as the window title until all information has been calculated
+Information on all planets cannot be retrieved immediately after loading. Information acquisition begins when the game started. This will take some time. Progress will be displayed as the window title until all information has been calculated
 
 Favorite feature adds/removes the "★" character directly to the planet name. Manually adding or removing the "★" character will affect this.
 
@@ -35,11 +35,14 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## ご注意
 
-バージョン0.4.1から資源の算出方法が変わりました。ロード直後はすべての惑星の情報を取得することができません。最初にPlanet Finderのウィンドウを開いた時点で情報取得を始めます。これにはしばらく時間がかかります。全情報の算出が完了するまでウィンドウタイトルに進捗が表示されます。
+ロード直後はすべての惑星の情報を取得することができません。ゲーム開始時から情報取得を始めます。これにはしばらく時間がかかります。全情報の算出が完了するまでウィンドウタイトルに進捗が表示されます。
 
 「お気に入り」機能は惑星名に「★」文字を直接付加します。手動で「★」文字を付加・削除すると「お気に入り」機能に影響します。
 
 ## Release Notes
+
+### v1.0.1
+- Reduced memory usage
 
 ### v1.0.0
 - Added name search

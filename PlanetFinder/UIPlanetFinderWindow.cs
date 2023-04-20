@@ -31,7 +31,83 @@ namespace PlanetFinderMod
         public int itemId;
         public long amount;
         public bool shouldShow;
+        public VeinGroup[] cachedVeinGroups = null;
+
+        public bool IsCalculatedOrLoaded()
+        {
+            return (planetData.calculated || cachedVeinGroups != null);
+        }
+
+        public VeinGroup[] VeinGroups()
+        {
+            if (!planetData.calculated)
+            {
+                return cachedVeinGroups;
+            }
+            else
+            {
+                return planetData.runtimeVeinGroups;
+            }
+        }
+
+        public bool IsContainItem(int itemId)
+        {
+            VeinGroup[] runtimeVeinGroups = VeinGroups();
+
+            if (runtimeVeinGroups == null)
+            {
+                return false;
+            }
+            for (int i = 1; i < runtimeVeinGroups.Length; i++)
+            {
+                if ((int)runtimeVeinGroups[i].type == itemId)
+                {
+                    if (runtimeVeinGroups[i].amount > 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        public long ItemCount(int itemId)
+        {
+            long amount = 0;
+            VeinGroup[] runtimeVeinGroups = VeinGroups();
+
+            if (runtimeVeinGroups == null)
+            {
+                return 0;
+            }
+            for (int i = 1; i < runtimeVeinGroups.Length; i++)
+            {
+                if ((int)runtimeVeinGroups[i].type == itemId)
+                {
+                    amount += runtimeVeinGroups[i].amount;
+                }
+            }
+            return amount;
+        }
+
+        public int ItemCountSketch(int itemId)
+        {
+            int amountSketch = 0;
+            VeinGroup[] runtimeVeinGroups = VeinGroups();
+
+            for (int i = 1; i < runtimeVeinGroups.Length; i++)
+            {
+                if ((int)runtimeVeinGroups[i].type == itemId)
+                {
+                    amountSketch += runtimeVeinGroups[i].count;
+                }
+            }
+            return amountSketch;
+        }
+
+
     }
+
 
     public class UIPlanetFinderWindow : ManualBehaviour, IPointerEnterHandler, IPointerExitHandler, IEventSystemHandler, MyWindow
     {
@@ -522,8 +598,9 @@ namespace PlanetFinderMod
 
 
         public const int veinCount = 15;
-        public bool IsTargetPlanet(PlanetData planet, int itemId)
+        public bool IsTargetPlanet(PlanetListData planetListData, int itemId)
         {
+            PlanetData planet = planetListData.planetData;
             if (planet.type == EPlanetType.Gas)
             {
                 if (planet.gasItems != null)
@@ -545,68 +622,17 @@ namespace PlanetFinderMod
             }
             if (itemId <= veinCount)
             {
-                if (!planet.calculated)
-                {
-                    return false;
-                }
-                VeinGroup[] runtimeVeinGroups = planet.runtimeVeinGroups;
-                if (runtimeVeinGroups == null)
-                {
-                    if (planet.data == null)
-                    {
-                        return false;
-                    }
-                    VeinData[] veinPool = planet.data.veinPool;
-                    int veinCursor = planet.data.veinCursor;
-                    for (int i = 1; i < veinCursor; i++)
-                    {
-                        if (veinPool[i].id == i && (int)veinPool[i].type == itemId)
-                        {
-                            if (veinPool[i].amount > 0)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
-                }
-                else
-                {
-                    for (int i = 1; i < runtimeVeinGroups.Length; i++)
-                    {
-                        if ((int)runtimeVeinGroups[i].type == itemId)
-                        {
-                            if (runtimeVeinGroups[i].amount > 0)
-                            {
-                                return true;
-                            }
-                        }
-                    }
-                }
-                //if (planet.loaded)
-                //{
-                //    if (planet.veinAmounts[itemId] > 0)
-                //    {
-                //        return true;
-                //    }
-                //}
-                //else
-                //{
-                //    if (planet.veinSpotsSketch != null && planet.veinSpotsSketch[itemId] > 0)
-                //    {
-                //        return true;
-                //    }
-                //}
+                return planetListData.IsContainItem(itemId);
             }
 
             return false;
         }
 
-        public bool IsTargetPlanet(PlanetData planet, HashSet<int> filterItems, bool orSearch = false)
+        public bool IsTargetPlanet(PlanetListData planetListData, HashSet<int> filterItems, bool orSearch = false)
         {
             foreach (int itemId in filterItems)
             {
-                if(IsTargetPlanet(planet, itemId) == orSearch)
+                if(IsTargetPlanet(planetListData, itemId) == orSearch)
                 {
                     return orSearch;
                 }
@@ -616,14 +642,14 @@ namespace PlanetFinderMod
 
         public bool IsTargetStar(StarData star, int itemId)
         {
-            for (int j = 0; j < star.planetCount; j++)
-            {
-                PlanetData planet = star.planets[j];
-                if (IsTargetPlanet(planet, itemId))
-                {
-                    return true;
-                }
-            }
+            //for (int j = 0; j < star.planetCount; j++)
+            //{
+            //    PlanetData planet = star.planets[j];
+            //    if (IsTargetPlanet(planet, itemId))
+            //    {
+            //        return true;
+            //    }
+            //}
             return false;
         }
 
@@ -747,8 +773,8 @@ namespace PlanetFinderMod
             {
                 foreach (PlanetListData d in _allPlanetList)
                 {
-                    PlanetData planet = d.planetData;
-                    if (d.shouldShow && IsTargetPlanet(planet, filterItems))
+                    //PlanetData planet = d.planetData;
+                    if (d.shouldShow && IsTargetPlanet(d, filterItems))
                     {
                         //d.shouldShow = true;
                     }

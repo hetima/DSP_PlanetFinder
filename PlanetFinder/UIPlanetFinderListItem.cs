@@ -286,22 +286,7 @@ namespace PlanetFinderMod
             }
             if (itemId <= veinCount)
             {
-                VeinGroup[] runtimeVeinGroups = planetData.runtimeVeinGroups;
-                if (runtimeVeinGroups == null)
-                {
-                    return 0;
-                }
-                for (int i = 1; i < runtimeVeinGroups.Length; i++)
-                {
-                    if ((int)runtimeVeinGroups[i].type == itemId)
-                    {
-                        amount += runtimeVeinGroups[i].amount;
-                    }
-                }
-                //if (planetData.veinAmounts[itemId] > 0)
-                //{
-                //    return planetData.veinAmounts[itemId];
-                //}
+                return listData.ItemCount(itemId);
             }
 
             return amount;
@@ -321,41 +306,7 @@ namespace PlanetFinderMod
             }
             if (itemId <= veinCount)
             {
-                VeinGroup[] runtimeVeinGroups = planetData.runtimeVeinGroups;
-                if (runtimeVeinGroups == null)
-                {
-                    if (planetData.data == null)
-                    {
-                        return 0;
-                    }
-                    VeinData[] veinPool = planetData.data.veinPool;
-                    int veinCursor = planetData.data.veinCursor;
-                    for (int i = 1; i < veinCursor; i++)
-                    {
-                        if (veinPool[i].id == i && (int)veinPool[i].type == itemId)
-                        {
-                            if (veinPool[i].amount > 0)
-                            {
-                                amount += 1;
-                            }
-                        }
-                    }
-                    return amount;
-                }
-                else
-                {
-                    for (int i = 1; i < runtimeVeinGroups.Length; i++)
-                    {
-                        if ((int)runtimeVeinGroups[i].type == itemId)
-                        {
-                            amount += runtimeVeinGroups[i].count;
-                        }
-                    }
-                }
-                //if (planetData.veinSpotsSketch != null && planetData.veinSpotsSketch[itemId] > 0)
-                //{
-                //    return planetData.veinSpotsSketch[itemId];
-                //}
+                return listData.ItemCountSketch(itemId);
             }
 
             return amount;

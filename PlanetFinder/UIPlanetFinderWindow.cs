@@ -6,6 +6,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
+using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace PlanetFinderMod
 {
@@ -32,6 +34,19 @@ namespace PlanetFinderMod
         public long amount;
         public bool shouldShow;
         public VeinGroup[] cachedVeinGroups = null;
+
+        public static int CalculatedOrLoadedCount(List<PlanetListData> list)
+        {
+            int count = 0;
+            foreach (PlanetListData item in list)
+            {
+                if (item.IsCalculatedOrLoaded())
+                {
+                    count++;
+                }
+            }
+            return count;
+        }
 
         public bool IsCalculatedOrLoaded()
         {
@@ -134,17 +149,111 @@ namespace PlanetFinderMod
         public bool isPointEnter;
         private bool focusPointEnter;
 
-        private bool calculated;
-        private bool calculating;
+        //private bool calculated;
+        //private bool calculating;
 
         internal List<PlanetListData> _allPlanetList = new List<PlanetListData>(800);
         internal List<PlanetListData> _planetList = new List<PlanetListData>(800);
 
+        private static Thread _planetCalculateThread = null;
+        public bool _stopThread;
+        private static UIPlanetFinderWindow _instance = null;
+
+        private static void PlanetCalculateThreadMain()
+        {
+            long seedKey64 = GameMain.data.gameDesc.seedKey64;
+            int planetCount = _instance._allPlanetList?.Count ?? 0;
+            Thread.Sleep(3000);
+            MyWindowCtl.SetTitle(_instance, "Planet Finder");
+            for (int i = 0; i < planetCount; i++)
+            {
+                if(_instance._stopThread || planetCount != _instance._allPlanetList.Count || seedKey64 != GameMain.data.gameDesc.seedKey64)
+                {
+                    return;
+                }
+                PlanetListData item = _instance._allPlanetList[i];
+                MyWindowCtl.SetTitle(_instance, "Init... (" + PlanetListData.CalculatedOrLoadedCount(_instance._allPlanetList).ToString() + "/" + planetCount.ToString() + ")");
+                if (!item.IsCalculatedOrLoaded() )
+                {
+                    bool needsFree = true;
+                    if (item.planetData.calculating)
+                    {
+                        needsFree = false;
+                    }
+                    else
+                    {
+                        if (_instance._stopThread)
+                        {
+                            return;
+                        }
+                        PlanetModelingManager.RequestCalcPlanet(item.planetData);
+                    }
+                    for (;;)
+                    {
+                        Thread.Sleep(100);
+                        if (_instance._stopThread)
+                        {
+                            return;
+                        }
+                        if (item.planetData.calculated)
+                        {
+                            VeinGroup[] v = item.planetData.runtimeVeinGroups;
+                            int num = v.Length;
+                            int num2 = (num >= 1) ? num : 1;
+                            item.cachedVeinGroups = new VeinGroup[num2];
+                            Array.Copy(v, item.cachedVeinGroups, num);
+                            item.cachedVeinGroups[0].SetNull();
+
+                            if (needsFree)
+                            {
+                                StarData localStar = GameMain.localStar;
+                                int starId;
+                                if (localStar != null)
+                                {
+                                    starId = localStar.id;
+                                }
+                                else
+                                {
+                                    starId = 0;
+                                }
+                                if (item.planetData.id / 100 != starId)
+                                {
+                                    //free
+                                    item.planetData.data.Free();
+                                    item.planetData.data = null;
+                                    item.planetData.modData = null;
+                                    item.planetData.aux = null;
+                                    item.planetData.calculated = false;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    VeinGroup[] v = item.planetData.runtimeVeinGroups;
+                    int num = v.Length;
+                    int num2 = (num >= 1) ? num : 1;
+                    item.cachedVeinGroups = new VeinGroup[num2];
+                    Array.Copy(v, item.cachedVeinGroups, num);
+                    item.cachedVeinGroups[0].SetNull();
+                }
+            }
+            MyWindowCtl.SetTitle(_instance, "Planet Finder");
+            PLFN.Log("loading vein data completed");
+
+        }
+
+
         public static UIPlanetFinderWindow CreateInstance()
         {
-            UIPlanetFinderWindow win = MyWindowCtl.CreateWindow<UIPlanetFinderWindow>("PlanetFinderWindow", "Planet Finder");
-
-            return win;
+            if (_instance != null)
+            {
+                return _instance;
+            }
+            _instance = MyWindowCtl.CreateWindow<UIPlanetFinderWindow>("PlanetFinderWindow", "Planet Finder");
+            return _instance;
         }
 
         public void BeginGame()
@@ -154,8 +263,9 @@ namespace PlanetFinderMod
                 return;
             }
             _eventLock = true;
-            calculated = false;
-            calculating = false;
+            //calculated = false;
+            //calculating = false;
+
             GalaxyData galaxy = GameMain.galaxy;
             _allPlanetList.Clear();
             _planetList.Clear();
@@ -179,50 +289,64 @@ namespace PlanetFinderMod
             }
             searchField.text = "";
             searchString = null;
+            _stopThread = false;
+            _planetCalculateThread = new Thread(new ThreadStart(PlanetCalculateThreadMain));
+            _planetCalculateThread.Start();
             _eventLock = false;
         }
 
-        public void RequestCalcAll()
+        public void EndGame()
         {
-            if (calculated)
+            if (_planetCalculateThread != null)
             {
-                return;
+                _stopThread = true;
+                _planetCalculateThread.Abort();
+                _planetCalculateThread = null;
             }
-            GalaxyData galaxy = GameMain.galaxy;
-            int planetsCount = 0;
-            int calculatingPlanetsCount = 0;
-
-            for (int i = 0; i < galaxy.starCount; i++)
-            {
-                StarData star = galaxy.stars[i];
-                for (int j = 0; j < star.planetCount; j++)
-                {
-                    PlanetData planet = star.planets[j];
-                    planetsCount++;
-                    //calculatingとかloadedとかのチェックはしてくれるので、ここではcalculatedだけチェックでよい
-                    if (!planet.calculated)
-                    {
-                        if (!calculating)
-                        {
-                            PlanetModelingManager.RequestCalcPlanet(planet);
-                            //or planet.RunCalculateThread();
-                        }
-                        calculatingPlanetsCount++;
-                    }
-                }
-            }
-            if (calculatingPlanetsCount == 0)
-            {
-                calculated = true;
-                calculating = false;
-                MyWindowCtl.SetTitle(this, "Planet Finder");
-            }
-            else
-            {
-                calculating = true;
-                MyWindowCtl.SetTitle(this, "Init... (" + (planetsCount - calculatingPlanetsCount).ToString() + "/" + planetsCount.ToString() +")");
-            }
+            MyWindowCtl.SetTitle(this, "Planet Finder");
         }
+
+        //public void RequestCalcAll()
+        //{
+        //    if (calculated)
+        //    {
+        //        return;
+        //    }
+        //    GalaxyData galaxy = GameMain.galaxy;
+        //    int planetsCount = 0;
+        //    int calculatingPlanetsCount = 0;
+
+        //    for (int i = 0; i < galaxy.starCount; i++)
+        //    {
+        //        StarData star = galaxy.stars[i];
+        //        for (int j = 0; j < star.planetCount; j++)
+        //        {
+        //            PlanetData planet = star.planets[j];
+        //            planetsCount++;
+        //            //calculatingとかloadedとかのチェックはしてくれるので、ここではcalculatedだけチェックでよい
+        //            if (!planet.calculated)
+        //            {
+        //                if (!calculating)
+        //                {
+        //                    PlanetModelingManager.RequestCalcPlanet(planet);
+        //                    //or planet.RunCalculateThread();
+        //                }
+        //                calculatingPlanetsCount++;
+        //            }
+        //        }
+        //    }
+        //    if (calculatingPlanetsCount == 0)
+        //    {
+        //        calculated = true;
+        //        calculating = false;
+        //        MyWindowCtl.SetTitle(this, "Planet Finder");
+        //    }
+        //    else
+        //    {
+        //        calculating = true;
+        //        MyWindowCtl.SetTitle(this, "Init... (" + (planetsCount - calculatingPlanetsCount).ToString() + "/" + planetsCount.ToString() +")");
+        //    }
+        //}
 
         public void SetUpAndOpen(int _itemId = 0)
         {
@@ -260,8 +384,8 @@ namespace PlanetFinderMod
         protected override void _OnCreate()
         {
             _eventLock = true;
-            calculated = false;
-            calculating = false;
+            //calculated = false;
+            //calculating = false;
             windowTrans = MyWindowCtl.GetRectTransform(this);
             windowTrans.sizeDelta = WindowSize();
 
@@ -496,10 +620,10 @@ namespace PlanetFinderMod
             }
             else if (step == 0)
             {
-                if (!calculated)
-                {
-                    RequestCalcAll();
-                }
+                //if (!calculated)
+                //{
+                //    RequestCalcAll();
+                //}
             }
 
 

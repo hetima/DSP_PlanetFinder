@@ -376,11 +376,15 @@ namespace PlanetFinderMod
 
                     CreateUI();
                 }
-                else
-                {
-                    planetFinder?.BeginGame();
-                }
+                planetFinder?.BeginGame();
             }
+
+            [HarmonyPrefix, HarmonyPatch(typeof(DSPGame), "EndGame")]
+            public static void DSPGame_EndGame_Prefix()
+            {
+                planetFinder?.EndGame();
+            }
+
 
             [HarmonyPostfix, HarmonyPatch(typeof(GameData), "ArrivePlanet")]
             public static void GameData_ArrivePlanet(PlanetData planet)

@@ -183,7 +183,7 @@ namespace PlanetFinderMod
             {
                 planetName = starData.displayName + distanceStr;
             }
-            else
+            else if (planetData != null)
             {
                 string prefix = "";
                 if (PLFN.showPrefix.Value)
@@ -207,29 +207,54 @@ namespace PlanetFinderMod
 
         public void SetUpPlanetColor()
         {
-            ThemeProto themeProto = LDB.themes.Select(planetData.theme);
-            if (themeProto != null && themeProto.thumbMat != null)
+            if (planetData != null)
             {
-                Material mat = themeProto.thumbMat[planetData.style % themeProto.thumbMat.Length];
-                Color c = mat.GetColor("_Color");
-                if (c != null)
+                ThemeProto themeProto = LDB.themes.Select(planetData.theme);
+                if (themeProto != null && themeProto.thumbMat != null)
                 {
-                    if (c.a < 0.5f)
+                    Material mat = themeProto.thumbMat[planetData.style % themeProto.thumbMat.Length];
+                    Color c = mat.GetColor("_Color");
+                    if (c != null)
                     {
-                        c.a = 0.5f;
+                        if (c.a < 0.5f)
+                        {
+                            c.a = 0.5f;
+                        }
+                        float shine = Mathf.Max(new float[] { c.r, c.g, c.b });
+                        if (shine > 0.6f)
+                        {
+                            c.a = 1.6f - shine;
+                        }
+                        c.a /= 1.4f;
+                        planetColor = c;
                     }
-                    float shine = Mathf.Max(new float[]{ c.r, c.g, c.b});
-                    if (shine > 0.6f)
+                    else
                     {
-                        c.a = 1.6f - shine;
+                        planetColor = new Color(1f, 1f, 1f, 0.6f);
                     }
-                    c.a /= 1.4f;
-                    planetColor = c;
                 }
-                else
+            }
+            else if (starData != null)
+            {
+                UIVirtualStarmap starmap = UIRoot.instance.galaxySelect.starmap;
+                planetColor = starmap.starColors.Evaluate(starData.color);
+                if (starData.type == EStarType.NeutronStar)
                 {
-                    planetColor = new Color(1f, 1f, 1f, 0.6f);
+                    planetColor = starmap.neutronStarColor;
                 }
+                else if (starData.type == EStarType.WhiteDwarf)
+                {
+                    planetColor = starmap.whiteDwarfColor;
+                }
+                else if (starData.type == EStarType.BlackHole)
+                {
+                    planetColor = starmap.blackholeColor;
+                }
+                planetColor.a = 0.8f;
+            }
+            else
+            {
+                planetColor = new Color(1f, 1f, 1f, 0.6f);
             }
         }
 
@@ -247,9 +272,19 @@ namespace PlanetFinderMod
             labelIcon.sprite = null;
             valueText.color = valueTextNormalColor;
 
-            if (PLFN.aDSPStarMapMemoIntg.canGetSignalIconId && PLFN.integrationWithDSPStarMapMemo.Value)
+            int planetId = 0;
+            if (planetData != null)
             {
-                int sign = PLFN.aDSPStarMapMemoIntg.GetSignalIconId(planetData.id);
+                planetId = planetData.id;
+            }
+            else if (starData != null)
+            {
+                planetId = starData.id;
+            }
+
+            if (planetId > 0 && PLFN.aDSPStarMapMemoIntg.canGetSignalIconId && PLFN.integrationWithDSPStarMapMemo.Value)
+            {
+                int sign = PLFN.aDSPStarMapMemoIntg.GetSignalIconId(planetId);
                 if (sign != 0)
                 {
                     labelIcon.sprite = LDB.signals.IconSprite(sign);
@@ -268,53 +303,130 @@ namespace PlanetFinderMod
 
         private void OnLocateButtonClick(int obj)
         {
-            PLFN.LocatePlanet(planetData.id);
+            if (planetData != null) {
+                PLFN.LocatePlanet(planetData.id);
+            }
+            else if (starData != null)
+            {
+                PLFN.LocatePlanet(0, starData.id);
+            }
         }
 
         public static int veinCount = 15;
+
         public long TargetItemAmount()
         {
+            long result = 0;
+            if (planetData != null)
+            {
+                return TargetItemAmountForPlanet(listData);
+            }
+            else if (starData != null)
+            {
+                return TargetItemAmountForStar(listData);
+            }
+            return result;
+        }
+        public long TargetItemAmountForStar(PlanetListData ld)
+        {
             long amount = 0;
-            if (planetData.type == EPlanetType.Gas)
+            if (ld.starData != null)
             {
-                return -1L;
+                if (itemId <= veinCount)
+                {
+                    foreach (PlanetListData item in ld.planetList)
+                    {
+                        amount += TargetItemAmountForPlanet(item);
+                    }
+                }
+                else
+                {
+                    return 0;
+                }
             }
+            return amount;
+        }
 
-            if (planetData.waterItemId >= 1000 && planetData.waterItemId == itemId)
+        public long TargetItemAmountForPlanet(PlanetListData ld)
+        {
+            PlanetData pd = ld.planetData;
+            long amount = 0;
+            if (pd != null)
             {
-                return -1L;
-            }
-            if (itemId <= veinCount)
-            {
-                return listData.ItemCount(itemId);
-            }
+                if (pd.type == EPlanetType.Gas)
+                {
+                    return 0;
+                }
 
+                if (pd.waterItemId >= 1000 && pd.waterItemId == itemId)
+                {
+                    return 0;
+                }
+                if (itemId <= veinCount)
+                {
+                    return ld.ItemCount(itemId);
+                }
+            }
             return amount;
         }
 
         public int TargetItemAmountSketch()
         {
+            if (planetData != null)
+            {
+                return TargetItemAmountSketchForPlanet(listData);
+            }
+            else if (starData != null)
+            {
+                return TargetItemAmountSketchForStar(listData);
+            }
+            return 0;
+        }
+        public int TargetItemAmountSketchForStar(PlanetListData ld)
+        {
             int amount = 0;
-            if (planetData.type == EPlanetType.Gas)
+            if (ld.starData != null)
             {
-                return -1;
+                if (itemId <= veinCount)
+                {
+                    foreach (PlanetListData item in ld.planetList)
+                    {
+                        amount += TargetItemAmountSketchForPlanet(item);
+                    }
+                }
+                else
+                {
+                    return 0;
+                }
             }
+            return amount;
+        }
 
-            if (planetData.waterItemId >= 1000 && planetData.waterItemId == itemId)
-            {
-                return -1;
-            }
-            if (itemId <= veinCount)
-            {
-                return listData.ItemCountSketch(itemId);
-            }
+        public int TargetItemAmountSketchForPlanet(PlanetListData ld)
+        {
+            PlanetData pd = ld.planetData;
+            int amount = 0;
+            if (pd != null) {
+                if (pd.type == EPlanetType.Gas)
+                {
+                    return 0;
+                }
 
+                if (pd.waterItemId >= 1000 && pd.waterItemId == itemId)
+                {
+                    return 0;
+                }
+                if (itemId <= veinCount)
+                {
+                    return ld.ItemCountSketch(itemId);
+                } 
+            }
             return amount;
         }
 
         public void Update()
         {
-            if (planetData != null)
+            if (planetData != null || starData != null)
             {
                 int step = Time.frameCount % 30;
                 if (step == 0 || window.needsReflesh)
@@ -394,7 +506,7 @@ namespace PlanetFinderMod
                     valueSketchText.text = "";
                 }
             }
-            else if (PLFN.showPowerState.Value && planetData.factory?.powerSystem != null)
+            else if (PLFN.showPowerState.Value && planetData?.factory?.powerSystem != null)
             {
                 valueText.text = PowerState(out int networkCount);
                 if (networkCount > 1)
@@ -417,11 +529,16 @@ namespace PlanetFinderMod
 
         public string PowerState(out int networkCount)
         {
+            string result = "";
+            networkCount = 0;
+            if (planetData == null)
+            {
+                return result;
+            }
+
             long energyCapacity = 0L;
             long energyRequired = 0L;
             long energyX = 0L;
-            string result = "";
-            networkCount = 0;
             PowerSystem powerSystem = planetData.factory.powerSystem;
             for (int i = 1; i < powerSystem.netCursor; i++)
             {
@@ -451,7 +568,7 @@ namespace PlanetFinderMod
                 double ratio = (double)energyRequired / (double)(energyCapacity + energyX);
                 if (ratio > 0.9f)
                 {
-                    result += " (" + ratio.ToString("P1") +")";
+                    result += " (" + ratio.ToString("P1") + ")";
                     if (energyX <= 0L)
                     {
                         if (ratio > 0.99f)
@@ -469,7 +586,6 @@ namespace PlanetFinderMod
             {
                 result = "--";
             }
-
             return result;
         }
 

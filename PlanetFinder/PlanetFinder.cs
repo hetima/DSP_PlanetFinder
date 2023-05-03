@@ -86,9 +86,9 @@ namespace PlanetFinderMod
             UIMessageBox b = UIMessageBox.Show("Upgrades Required".Translate(), "To use this feature, Universe Exploration 4 is required.".Translate(), "OK", 0);
         }
 
-        public static void LocatePlanet(int planetId)
+        public static void LocatePlanet(int planetId, int starId = 0)
         {
-            if (planetId <= 0)
+            if (planetId <= 0 && starId <= 0)
             {
                 return;
             }
@@ -101,8 +101,8 @@ namespace PlanetFinderMod
                 UIRoot.instance.uiGame.ShutAllFunctionWindow();
                 //UIRoot.instance.uiGame.ShutAllFullScreens();
                 UIRoot.instance.uiGame.OpenStarmap();
-                int starIdx = planetId / 100;
-                int planetIdx = planetId % 100;
+                int starIdx = planetId > 0 ? planetId / 100 : starId;
+                int planetIdx = planetId > 0 ? planetId % 100 : 0;
                 UIStarmap map = UIRoot.instance.uiGame.starmap;
                 //PlanetData planet = GameMain.galaxy.PlanetById(planetId);
                 //if (planet != null){}

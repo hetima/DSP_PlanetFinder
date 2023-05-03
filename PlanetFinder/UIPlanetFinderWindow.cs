@@ -7,20 +7,20 @@ using UnityEngine.UI;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 using System.Threading;
-using System.Runtime.InteropServices;
+
 
 namespace PlanetFinderMod
 {
     public enum Scope
     {
         None = 0,
-        //Star,
         CurrentStar,
         Planet,
         HasFactory,
         Fav,
         Recent,
         Gas,
+        System,
     }
 
 
@@ -28,8 +28,9 @@ namespace PlanetFinderMod
     {
         public int distanceForSort;
         public string distanceStr;
-        public PlanetData planetData;
-        public StarData starData;
+        public PlanetData planetData; // planet only
+        public StarData starData; // star only
+        public List<PlanetListData> planetList; // star only
         public int itemId;
         public long amount;
         public bool shouldShow;
@@ -110,6 +111,10 @@ namespace PlanetFinderMod
             int amountSketch = 0;
             VeinGroup[] runtimeVeinGroups = VeinGroups();
 
+            if (runtimeVeinGroups == null)
+            {
+                return 0;
+            }
             for (int i = 1; i < runtimeVeinGroups.Length; i++)
             {
                 if ((int)runtimeVeinGroups[i].type == itemId)
@@ -152,8 +157,9 @@ namespace PlanetFinderMod
         //private bool calculated;
         //private bool calculating;
 
-        internal List<PlanetListData> _allPlanetList = new List<PlanetListData>(800);
-        internal List<PlanetListData> _planetList = new List<PlanetListData>(800);
+        public List<PlanetListData> _allPlanetList = new List<PlanetListData>(800);
+        public List<PlanetListData> _allStarList = new List<PlanetListData>(80);
+        public List<PlanetListData> _planetList = new List<PlanetListData>(800);
 
         private static Thread _planetCalculateThread = null;
         public bool _stopThread;
@@ -268,10 +274,22 @@ namespace PlanetFinderMod
 
             GalaxyData galaxy = GameMain.galaxy;
             _allPlanetList.Clear();
+            _allStarList.Clear();
             _planetList.Clear();
             for (int i = 0; i < galaxy.starCount; i++)
             {
                 StarData star = galaxy.stars[i];
+                PlanetListData sd = new PlanetListData()
+                {
+                    planetData = null,
+                    starData = star,
+                    distanceForSort = 0,
+                    distanceStr = null,
+                    itemId = targetItemId,
+                    shouldShow = false,
+                    planetList = new List<PlanetListData>(),
+                };
+                _allStarList.Add(sd);
                 for (int j = 0; j < star.planetCount; j++)
                 {
                     PlanetData planetData = star.planets[j];
@@ -285,6 +303,7 @@ namespace PlanetFinderMod
                         shouldShow = false,
                     };
                     _allPlanetList.Add(d);
+                    sd.planetList.Add(d);
                 }
             }
             searchField.text = "";
@@ -419,7 +438,7 @@ namespace PlanetFinderMod
                 return btn;
             }
             scopeButtons = new List<UIButton>(8);
-            //scopeButtons.Add(AddScope("Star", (int)Scope.Star));
+            scopeButtons.Add(AddScope("Sys", (int)Scope.System));
             scopeButtons.Add(AddScope("All Planet", (int)Scope.Planet));
             scopeButtons.Add(AddScope("Current Star", (int)Scope.CurrentStar));
             scopeButtons.Add(AddScope("Has Factory", (int)Scope.HasFactory));
@@ -725,56 +744,80 @@ namespace PlanetFinderMod
         public bool IsTargetPlanet(PlanetListData planetListData, int itemId)
         {
             PlanetData planet = planetListData.planetData;
-            if (planet.type == EPlanetType.Gas)
+            if (planet != null)
             {
-                if (planet.gasItems != null)
+                if (planet.type == EPlanetType.Gas)
                 {
-                    foreach (var item in planet.gasItems)
+                    if (planet.gasItems != null)
                     {
-                        if (item == itemId)
+                        foreach (var item in planet.gasItems)
                         {
-                            return true;
+                            if (item == itemId)
+                            {
+                                return true;
+                            }
                         }
                     }
+                    return false;
                 }
-                return false;
-            }
 
-            if (planet.waterItemId >= 1000 && planet.waterItemId == itemId)
-            {
-                return true;
+                if (planet.waterItemId >= 1000 && planet.waterItemId == itemId)
+                {
+                    return true;
+                }
+                if (itemId <= veinCount)
+                {
+                    return planetListData.IsContainItem(itemId);
+                }
             }
-            if (itemId <= veinCount)
-            {
-                return planetListData.IsContainItem(itemId);
-            }
-
             return false;
         }
 
         public bool IsTargetPlanet(PlanetListData planetListData, HashSet<int> filterItems, bool orSearch = false)
         {
-            foreach (int itemId in filterItems)
+            if (planetListData.planetData != null)
             {
-                if(IsTargetPlanet(planetListData, itemId) == orSearch)
+                foreach (int itemId in filterItems)
                 {
-                    return orSearch;
+                    if (IsTargetPlanet(planetListData, itemId) == orSearch)
+                    {
+                        return orSearch;
+                    }
                 }
+                return !orSearch;
             }
-            return !orSearch;
+            else if(planetListData.starData != null)
+            {
+                return IsTargetStar(planetListData, filterItems, orSearch);
+            }
+            return false;
         }
 
-        public bool IsTargetStar(StarData star, int itemId)
+        
+        public bool IsTargetStar(PlanetListData planetListData, HashSet<int> filterItems, bool orSearch = false)
         {
-            //for (int j = 0; j < star.planetCount; j++)
-            //{
-            //    PlanetData planet = star.planets[j];
-            //    if (IsTargetPlanet(planet, itemId))
-            //    {
-            //        return true;
-            //    }
-            //}
-            return false;
+            HashSet<int> notFound = new HashSet<int>(filterItems); 
+            if(planetListData.starData != null)
+            {
+                foreach (PlanetListData item in planetListData.planetList)
+                {
+                    foreach (int itemId in filterItems)
+                    {
+                        if (IsTargetPlanet(item, itemId))
+                        {
+                            notFound.Remove(itemId);
+                        }
+                    }
+                }
+            }
+            if (orSearch)
+            {
+                return  filterItems.Count != notFound.Count;
+            }
+            else
+            {
+                return notFound.Count == 0;
+            }
         }
 
 
@@ -863,7 +906,12 @@ namespace PlanetFinderMod
             foreach (PlanetListData d in _allPlanetList)
             {
                 d.distanceForSort = -1;
-                d.shouldShow = true; //scope == Scope.Planet
+                d.shouldShow = scope != Scope.System;
+            }
+            foreach (PlanetListData d in _allStarList)
+            {
+                d.distanceForSort = -1;
+                d.shouldShow = scope == Scope.System;
             }
             //scope
             if (scope == Scope.HasFactory)
@@ -891,13 +939,13 @@ namespace PlanetFinderMod
             //    }
             //}
 
+            List<PlanetListData> list = scope == Scope.System ? _allStarList : _allPlanetList;
 
             //filter by item
             if (filterItems.Count > 0)
             {
-                foreach (PlanetListData d in _allPlanetList)
+                foreach (PlanetListData d in list)
                 {
-                    //PlanetData planet = d.planetData;
                     if (d.shouldShow && IsTargetPlanet(d, filterItems))
                     {
                         //d.shouldShow = true;
@@ -913,30 +961,49 @@ namespace PlanetFinderMod
             if (!string.IsNullOrWhiteSpace(searchString))
             {
                 string str = searchString.Trim().ToLower();
-                foreach (PlanetListData d in _allPlanetList)
+                foreach (PlanetListData d in list)
                 {
-                    if (d.shouldShow)
+                    if (!d.shouldShow)
                     {
-                        if (d.planetData.displayName.ToLower().Contains(str))
+                        continue;
+                    }
+                    string planetName = "";
+                    int planetId = 0;
+                    if (d.planetData != null)
+                    {
+                        planetName = d.planetData.displayName.ToLower();
+                        planetId = d.planetData.id;
+                    }
+                    else if (d.starData != null)
+                    {
+                        planetName = d.starData.displayName.ToLower();
+                        planetId = d.starData.id;
+                    }
+                    else
+                    {
+                        d.shouldShow = false;
+                        continue;
+                    }
+
+                    if (planetName.Contains(str))
+                    {
+                        continue;
+                    }
+                    else if (planetId > 0 && PLFN.integrationWithDSPStarMapMemo.Value && PLFN.aDSPStarMapMemoIntg.canGetDesc)
+                    {
+                        string memo = PLFN.aDSPStarMapMemoIntg.GetDesc(planetId);
+                        if (!string.IsNullOrWhiteSpace(memo) && memo.ToLower().Contains(str))
                         {
                             continue;
                         }
-                        else if (PLFN.integrationWithDSPStarMapMemo.Value && PLFN.aDSPStarMapMemoIntg.canGetDesc)
-                        {
-                            string memo = PLFN.aDSPStarMapMemoIntg.GetDesc(d.planetData.id);
-                            if (!string.IsNullOrWhiteSpace(memo) && memo.ToLower().Contains(str))
-                            {
-                                continue;
-                            }
-                        }
-                        d.shouldShow = false;
                     }
+                    d.shouldShow = false;
                 }
             }
 
             //add to list
             _planetList.Clear();
-            foreach (PlanetListData item in _allPlanetList)
+            foreach (PlanetListData item in list)
             {
                 if (item.shouldShow)
                 {
@@ -976,6 +1043,14 @@ namespace PlanetFinderMod
         internal void SetupDistanceForSort(PlanetListData d, int nearStar)
         {
             PlanetData planet=d.planetData;
+            if (planet == null)
+            {
+                planet = d.starData.planets[0];
+            }
+            if (planet == null)
+            {
+                return;
+            }
             int sortIndex = d.distanceForSort;
 
             string distanceStr = "";
@@ -1129,7 +1204,14 @@ namespace PlanetFinderMod
             switch ((EMenuCommand)obj)
             {
                 case EMenuCommand.OpenStarmap:
-                    PLFN.LocatePlanet(menuTarget.planetData?.id ?? 0);
+                    if (menuTarget.planetData != null)
+                    {
+                        PLFN.LocatePlanet(menuTarget.planetData.id);
+                    }
+                    else if (menuTarget.starData != null)
+                    {
+                        PLFN.LocatePlanet(0, menuTarget.starData.id);
+                    }
                     break;
                 case EMenuCommand.OpenLSTM:
                     PLFN.aLSTMIntg.OpenPlanetId(menuTarget.planetData?.id ?? 0);
@@ -1160,21 +1242,23 @@ namespace PlanetFinderMod
             {
                 return;
             }
+            if (item.listData.planetData != null)
+            {
+                menuTarget = item;
+                ////menuTarget.LockAppearance();
+                popupMenuListItem.Init(menuTarget.listData, this);
+                popupMenuListItem.disableUIAction = true;
+                Vector3 pos = menuTarget.transform.position;
 
-            menuTarget = item;
-            ////menuTarget.LockAppearance();
-            popupMenuListItem.Init(menuTarget.listData, this);
-            popupMenuListItem.disableUIAction = true;
-            Vector3 pos = menuTarget.transform.position;
+                popupMenuBase.transform.position = pos;
+                Vector2 localPos = (popupMenuBase.transform as RectTransform).localPosition;
+                localPos.x -= 1f;
+                localPos.y += popupMenuTopMargin;
+                (popupMenuBase.transform as RectTransform).localPosition = localPos;
 
-            popupMenuBase.transform.position = pos;
-            Vector2 localPos = (popupMenuBase.transform as RectTransform).localPosition;
-            localPos.x -= 1f;
-            localPos.y += popupMenuTopMargin;
-            (popupMenuBase.transform as RectTransform).localPosition = localPos;
-
-            favBtn.highlighted = PLFN.IsFavPlanet(menuTarget.planetData);
-            popupMenuBase.SetActive(true);
+                favBtn.highlighted = PLFN.IsFavPlanet(menuTarget.planetData);
+                popupMenuBase.SetActive(true);
+            }
 
         }
     }

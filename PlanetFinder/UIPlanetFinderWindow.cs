@@ -400,7 +400,7 @@ namespace PlanetFinderMod
             child.RefreshValues();
         }
 
-        protected override void _OnCreate()
+        public override void _OnCreate()
         {
             _eventLock = true;
             //calculated = false;
@@ -546,12 +546,12 @@ namespace PlanetFinderMod
             PLFN._configWin.OpenWindow();
         }
 
-        protected override void _OnDestroy()
+        public override void _OnDestroy()
         {
 
         }
 
-        protected override bool _OnInit()
+        public override bool _OnInit()
         {
             windowTrans.anchoredPosition = new Vector2(370f, -446f + (windowTrans.sizeDelta.y / 2)); // pivot=0.5 なので /2
             PLFN.mainWindowSize.SettingChanged += (sender, args) => {
@@ -561,11 +561,11 @@ namespace PlanetFinderMod
             return true;
         }
 
-        protected override void _OnFree()
+        public override void _OnFree()
         {
 
         }
-        protected override void _OnRegEvent()
+        public override void _OnRegEvent()
         {
             foreach (var btn in scopeButtons)
             {
@@ -573,7 +573,7 @@ namespace PlanetFinderMod
             }
             planetListView.m_ScrollRect.onValueChanged.AddListener(OnScrollRectChanged);
         }
-        protected override void _OnUnregEvent()
+        public override void _OnUnregEvent()
         {
             foreach (var btn in scopeButtons)
             {
@@ -582,13 +582,13 @@ namespace PlanetFinderMod
             planetListView.m_ScrollRect.onValueChanged.RemoveListener(OnScrollRectChanged);
         }
 
-        protected override void _OnOpen()
+        public override void _OnOpen()
         {
             searchField.onValueChanged.AddListener(new UnityAction<string>(this.OnSearchFieldValueChanged));
             searchField.onEndEdit.AddListener(new UnityAction<string>(OnSearchFieldEndEdit));
         }
 
-        protected override void _OnClose()
+        public override void _OnClose()
         {
             popupMenuBase.SetActive(false);
             searchField.onValueChanged.RemoveAllListeners();
@@ -600,7 +600,7 @@ namespace PlanetFinderMod
             isPointEnter = false;
         }
 
-        protected override void _OnUpdate()
+        public override void _OnUpdate()
         {
             needsReflesh = false;
             if (VFInput.escape && !UIRoot.instance.uiGame.starmap.active && !VFInput.inputing)
@@ -625,7 +625,7 @@ namespace PlanetFinderMod
             }
 
 
-            bool valid = true;
+            //bool valid = true;
             int step = Time.frameCount % 30;
 
             if (Input.GetKeyDown(KeyCode.Tab))

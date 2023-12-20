@@ -44,6 +44,9 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 ### v1.1.1
 - Support Dark Fog Update(0.10.28.20779) (just rebuild only)
 
+<details>
+<summary>Previous Changelog</summary>
+
 ### v1.1.0
 - Added star system scope
 
@@ -86,3 +89,4 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 - Initial Release
 
+</details>

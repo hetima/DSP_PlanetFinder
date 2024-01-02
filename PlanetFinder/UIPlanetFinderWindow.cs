@@ -321,6 +321,8 @@ namespace PlanetFinderMod
                 _stopThread = true;
                 _planetCalculateThread.Abort();
                 _planetCalculateThread = null;
+                //Wait for the calculation thread to abort
+                Thread.Sleep(1600);
             }
             MyWindowCtl.SetTitle(this, "Planet Finder");
         }

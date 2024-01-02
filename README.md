@@ -41,6 +41,9 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
+### v1.1.2
+- Suppressed error when loading other save when the calculation has not been completed.
+
 ### v1.1.1
 - Support Dark Fog Update(0.10.28.20779) (just rebuild only)
 

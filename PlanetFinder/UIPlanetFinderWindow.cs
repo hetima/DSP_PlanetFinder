@@ -974,6 +974,16 @@ namespace PlanetFinderMod
                     if (d.planetData != null)
                     {
                         planetName = d.planetData.displayName.ToLower();
+                        //[GAS] [TL]
+                        if (d.planetData.type == EPlanetType.Gas)
+                        {
+                            planetName = PLFN.gasGiantPrefix.Value.ToLower() + ' ' + planetName;
+                        }
+                        if ((d.planetData.singularity & EPlanetSingularity.TidalLocked) != EPlanetSingularity.None)
+                        {
+                            planetName = PLFN.tidalLockedPrefix.Value.ToLower() + ' ' + planetName;
+                        }
+
                         planetId = d.planetData.id;
                     }
                     else if (d.starData != null)

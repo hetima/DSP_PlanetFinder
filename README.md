@@ -41,6 +41,9 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
+### v1.1.3
+- Tidal locked or gas giant planets can be name searched by typing `[TL]` or `[GAS]`.
+
 ### v1.1.2
 - Suppressed error when loading other save when the calculation has not been completed.
 

@@ -281,7 +281,7 @@ namespace PlanetFinderMod
             {
                 panelButtonGO.name = "open-planet-finder";
                 rect.localScale = new Vector3(0.6f, 0.6f, 0.6f);
-                rect.anchoredPosition3D = new Vector3(136f, -60f, 0f);
+                rect.anchoredPosition3D = new Vector3(135f, -80f, 0f);
                 b.onClick.RemoveAllListeners();
                 btn.onClick += OnShowWindowButtonClick;
                 btn.tips.tipTitle = "Planet Finder";

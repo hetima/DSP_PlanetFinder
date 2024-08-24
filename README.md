@@ -40,6 +40,9 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 「お気に入り」機能は惑星名に「★」文字を直接付加します。手動で「★」文字を付加・削除すると「お気に入り」機能に影響します。
 
 ## Release Notes
+### v1.1.5
+- Fix scrollbar
+
 ### v1.1.4
 - Adjust button position
 

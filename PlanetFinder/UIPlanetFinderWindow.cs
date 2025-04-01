@@ -51,12 +51,12 @@ namespace PlanetFinderMod
 
         public bool IsCalculatedOrLoaded()
         {
-            return (planetData.calculated || cachedVeinGroups != null);
+            return (planetData.scanned || cachedVeinGroups != null);
         }
 
         public VeinGroup[] VeinGroups()
         {
-            if (!planetData.calculated)
+            if (!planetData.scanned)
             {
                 return cachedVeinGroups;
             }
@@ -182,7 +182,7 @@ namespace PlanetFinderMod
                 if (!item.IsCalculatedOrLoaded() )
                 {
                     bool needsFree = true;
-                    if (item.planetData.calculating)
+                    if (item.planetData.scanning)
                     {
                         needsFree = false;
                     }
@@ -192,7 +192,7 @@ namespace PlanetFinderMod
                         {
                             return;
                         }
-                        PlanetModelingManager.RequestCalcPlanet(item.planetData);
+                        PlanetModelingManager.RequestScanPlanet(item.planetData);
                     }
                     for (;;)
                     {
@@ -201,7 +201,7 @@ namespace PlanetFinderMod
                         {
                             return;
                         }
-                        if (item.planetData.calculated)
+                        if (item.planetData.scanned)
                         {
                             VeinGroup[] v = item.planetData.runtimeVeinGroups;
                             int num = v.Length;
@@ -229,7 +229,7 @@ namespace PlanetFinderMod
                                     item.planetData.data = null;
                                     item.planetData.modData = null;
                                     item.planetData.aux = null;
-                                    item.planetData.calculated = false;
+                                    item.planetData.scanned = false;
                                 }
                             }
                             break;

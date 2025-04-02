@@ -41,6 +41,9 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
+### v1.1.7
+- Fix for game version 0.10.32.25779
+
 ### v1.1.6
 - Fix UI for game version 0.10.32
 

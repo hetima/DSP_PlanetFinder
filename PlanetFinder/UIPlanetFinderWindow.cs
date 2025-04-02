@@ -230,8 +230,12 @@ namespace PlanetFinderMod
                                         item.planetData.data.Free();
                                         item.planetData.data = null;
                                     }
-                                    item.planetData.modData = null;
-                                    item.planetData.aux = null;
+                                    //item.planetData.modData = null;
+                                    if (item.planetData.aux != null)
+                                    {
+                                        item.planetData.aux.Free();
+                                        item.planetData.aux = null;
+                                    }
                                     item.planetData.scanned = false;
                                 }
                             }

@@ -225,8 +225,11 @@ namespace PlanetFinderMod
                                 if (item.planetData.id / 100 != starId)
                                 {
                                     //free
-                                    item.planetData.data.Free();
-                                    item.planetData.data = null;
+                                    if (item.planetData.data != null)
+                                    {
+                                        item.planetData.data.Free();
+                                        item.planetData.data = null;
+                                    }
                                     item.planetData.modData = null;
                                     item.planetData.aux = null;
                                     item.planetData.scanned = false;

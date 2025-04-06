@@ -192,7 +192,7 @@ namespace PlanetFinderMod
                         {
                             return;
                         }
-                        //PlanetModelingManager.RequestScanPlanet(item.planetData);
+                        PlanetModelingManager.RequestScanPlanet(item.planetData);
                     }
                     for (;;)
                     {

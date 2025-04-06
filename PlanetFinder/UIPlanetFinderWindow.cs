@@ -210,35 +210,36 @@ namespace PlanetFinderMod
                             Array.Copy(v, item.cachedVeinGroups, num);
                             item.cachedVeinGroups[0].SetNull();
 
-                            if (needsFree)
-                            {
-                                StarData localStar = GameMain.localStar;
-                                int starId;
-                                if (localStar != null)
-                                {
-                                    starId = localStar.id;
-                                }
-                                else
-                                {
-                                    starId = 0;
-                                }
-                                if (item.planetData.id / 100 != starId)
-                                {
-                                    //free
-                                    if (item.planetData.data != null)
-                                    {
-                                        item.planetData.data.Free();
-                                        item.planetData.data = null;
-                                    }
-                                    //item.planetData.modData = null;
-                                    if (item.planetData.aux != null)
-                                    {
-                                        item.planetData.aux.Free();
-                                        item.planetData.aux = null;
-                                    }
-                                    item.planetData.scanned = false;
-                                }
-                            }
+                            //no needs free https://github.com/GreyHak/dsp-csv-gen/issues/30
+                            //if (needsFree)
+                            //{
+                            //    StarData localStar = GameMain.localStar;
+                            //    int starId;
+                            //    if (localStar != null)
+                            //    {
+                            //        starId = localStar.id;
+                            //    }
+                            //    else
+                            //    {
+                            //        starId = 0;
+                            //    }
+                            //    if (item.planetData.id / 100 != starId)
+                            //    {
+                            //        //free
+                            //        if (item.planetData.data != null)
+                            //        {
+                            //            item.planetData.data.Free();
+                            //            item.planetData.data = null;
+                            //        }
+                            //        //item.planetData.modData = null;
+                            //        if (item.planetData.aux != null)
+                            //        {
+                            //            item.planetData.aux.Free();
+                            //            item.planetData.aux = null;
+                            //        }
+                            //        item.planetData.scanned = false;
+                            //    }
+                            //}
                             break;
                         }
                     }

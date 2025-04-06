@@ -192,7 +192,7 @@ namespace PlanetFinderMod
                         {
                             return;
                         }
-                        PlanetModelingManager.RequestScanPlanet(item.planetData);
+                        //PlanetModelingManager.RequestScanPlanet(item.planetData);
                     }
                     for (;;)
                     {
@@ -210,7 +210,7 @@ namespace PlanetFinderMod
                             Array.Copy(v, item.cachedVeinGroups, num);
                             item.cachedVeinGroups[0].SetNull();
 
-                            //no needs free https://github.com/GreyHak/dsp-csv-gen/issues/30
+                            //No need free https://github.com/GreyHak/dsp-csv-gen/issues/30
                             //if (needsFree)
                             //{
                             //    StarData localStar = GameMain.localStar;

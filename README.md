@@ -15,7 +15,7 @@ Right-clicking a row brings up a panel offering various functions.
 
 ## Attention
 
-Information on all planets cannot be retrieved immediately after loading. Information acquisition begins when the game started. This will take some time. Progress will be displayed as the window title until all information has been calculated
+Information on all planets cannot be retrieved immediately after loading. Information acquisition begins when the game started. This will take some time. Progress will be displayed as the window title until all information has been calculated.
 
 Favorite feature adds/removes the "★" character directly to the planet name. Manually adding or removing the "★" character will affect this.
 
@@ -41,8 +41,14 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
+### v1.1.8
+- Better quality fixes for game version 0.10.32.25779
+
 ### v1.1.7
 - Fix for game version 0.10.32.25779
+
+<details>
+<summary>Previous Changelog</summary>
 
 ### v1.1.6
 - Fix UI for game version 0.10.32
@@ -61,9 +67,6 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ### v1.1.1
 - Support Dark Fog Update(0.10.28.20779) (just rebuild only)
-
-<details>
-<summary>Previous Changelog</summary>
 
 ### v1.1.0
 - Added star system scope

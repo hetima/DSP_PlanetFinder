@@ -15,7 +15,7 @@ Right-clicking a row brings up a panel offering various functions.
 
 ## Attention
 
-Information on all planets cannot be retrieved immediately after loading. Information acquisition begins when the game started. This will take some time. Progress will be displayed as the window title until all information has been calculated.
+Information on all planets cannot be retrieved immediately after loading. Information acquisition begins when the game started. This will take some time. Progress will be displayed as the window title until all information has been calculated. Starting with game version 0.10.32.25779, this work is no longer necessary and is available immediately (or performed only once), since the information is stored in the save data.
 
 Favorite feature adds/removes the "★" character directly to the planet name. Manually adding or removing the "★" character will affect this.
 
@@ -35,7 +35,7 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## ご注意
 
-ロード直後はすべての惑星の情報を取得することができません。ゲーム開始時から情報取得を始めます。これにはしばらく時間がかかります。全情報の算出が完了するまでウィンドウタイトルに進捗が表示されます。
+ロード直後はすべての惑星の情報を取得することができません。ゲーム開始時から情報取得を始めます。これにはしばらく時間がかかります。全情報の算出が完了するまでウィンドウタイトルに進捗が表示されます。ゲームバージョン 0.10.32.25779 以降はセーブデータに情報が保存されるため、この作業はなくなり即座に利用できるようになります（あるいは1回だけ実行されます）。
 
 「お気に入り」機能は惑星名に「★」文字を直接付加します。手動で「★」文字を付加・削除すると「お気に入り」機能に影響します。
 

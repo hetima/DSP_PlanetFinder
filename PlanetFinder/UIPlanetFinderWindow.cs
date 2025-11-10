@@ -429,6 +429,12 @@ namespace PlanetFinderMod
 
             planetListView = MyListView.CreateListView(UIPlanetFinderListItem.CreateListViewPrefab(), PopulateItem, "list-view");
             Util.NormalizeRectWithMargin(planetListView.transform, 0f, 0f, 0f, 0f, bg.transform);
+            RectTransform listRect = planetListView.transform as RectTransform;
+            listRect.anchoredPosition = new Vector2(134.3541f, -0.0001f);
+            listRect.pivot = new Vector2(0.5f, 0.5f);
+            listRect.sizeDelta = new Vector2(256f, 0f);
+            listRect.anchorMin = new Vector2(0, 0);
+            listRect.anchorMax = new Vector2(1, 1);
             //ここでサイズ調整…
             //(planetListView.m_ItemRes.com_data.transform as RectTransform).sizeDelta = new Vector2(600f, 24f);
             planetListView.m_ScrollRect.scrollSensitivity = 28f;

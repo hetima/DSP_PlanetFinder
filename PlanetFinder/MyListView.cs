@@ -55,7 +55,11 @@ namespace PlanetFinderMod
 
             //あんまり上手くはないけどとりあえず変わる
             RectTransform vsRect = result.recyclingListView.scrollRect.verticalScrollbar.transform as RectTransform;
-            vsRect.sizeDelta = new Vector2(vsWidth, vsRect.sizeDelta.y);
+            vsRect.anchoredPosition = new Vector2(-255.2711f, -0.0001f);
+            vsRect.pivot = new Vector2(0f, 1f);
+            vsRect.sizeDelta = new Vector2(16f, 0f);
+            vsRect.anchorMin = new Vector2(1, 0);
+            vsRect.anchorMax = new Vector2(1, 1);
             Destroy(uiListView.m_ContentPanel);
             Destroy(uiListView);
 

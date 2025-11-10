@@ -95,22 +95,23 @@ namespace PlanetFinderMod
             //planetFinder.keepOpen = true;
             //int local = GameMain.localPlanet != null ? GameMain.localPlanet.id : 0;
 
-            if (GameMain.history.universeObserveLevel >= 4)
+
+            UIRoot.instance.uiGame.ShutPlayerInventory();
+            UIRoot.instance.uiGame.ShutAllFunctionWindow();
+            //UIRoot.instance.uiGame.ShutAllFullScreens();
+            UIRoot.instance.uiGame.OpenStarmap();
+            int starIdx = planetId > 0 ? planetId / 100 : starId;
+            int planetIdx = planetId > 0 ? planetId % 100 : 0;
+            UIStarmap map = UIRoot.instance.uiGame.starmap;
+            //PlanetData planet = GameMain.galaxy.PlanetById(planetId);
+            //if (planet != null){}
+
+            if (map.starUIs != null)
             {
-                UIRoot.instance.uiGame.ShutPlayerInventory();
-                UIRoot.instance.uiGame.ShutAllFunctionWindow();
-                //UIRoot.instance.uiGame.ShutAllFullScreens();
-                UIRoot.instance.uiGame.OpenStarmap();
-                int starIdx = planetId > 0 ? planetId / 100 : starId;
-                int planetIdx = planetId > 0 ? planetId % 100 : 0;
-                UIStarmap map = UIRoot.instance.uiGame.starmap;
-                //PlanetData planet = GameMain.galaxy.PlanetById(planetId);
-                //if (planet != null){}
-                
                 map.focusPlanet = null;
                 map.focusStar = map.starUIs[starIdx - 1];
                 map.OnCursorFunction2Click(0);
-                if (planetIdx > 0 && map.focusStar == null)
+                if (planetIdx > 0 && map.focusStar == null && map.planetUIs != null)
                 {
                     map.focusPlanet = map.planetUIs[planetIdx - 1];
                     map.OnCursorFunction2Click(0);
@@ -122,12 +123,8 @@ namespace PlanetFinderMod
                 {
                     //map.focusStar = map.starUIs[starIdx - 1]; //
                 }
+            }
                 
-            }
-            else
-            {
-                UniverseExplorationRequired();
-            }
 
             //_win.keepOpen = false;
         }

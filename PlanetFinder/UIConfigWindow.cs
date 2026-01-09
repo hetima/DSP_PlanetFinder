@@ -126,7 +126,7 @@ namespace PlanetFinderMod
 
             txt = CreateText("Window Size");
             AddElement(txt.transform as RectTransform, 32f);
-            rect = MySlider.CreateSlider(PLFN.mainWindowSize, 4f, 12f, "0", 200f);
+            rect = MySlider.CreateSlider(PLFN.mainWindowSize, 4f, 40f, "0", 200f);
             AddElement(rect, 26f);
 
             rect = MyCheckBox.CreateCheckBox(PLFN.showPowerState, "Show Power State In List");

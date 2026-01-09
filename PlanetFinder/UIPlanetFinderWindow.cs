@@ -397,9 +397,9 @@ namespace PlanetFinderMod
             {
                 rows = 4f;
             }
-            if (rows > 16f)
+            if (rows > 40f)
             {
-                rows = 16f;
+                rows = 40f;
             }
             return new Vector2(640, 174 + 28 * rows);
         }

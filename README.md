@@ -41,6 +41,9 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
+### v1.2.1
+- Increase window size limit and fix list item positioning (by FyisFe)
+
 ### v1.2.0
 - Fix layout (by Sidaril)
 - Suppress error

@@ -13,7 +13,7 @@ using static PlanetFinderMod.UIPlanetFinderWindow;
 namespace PlanetFinderMod
 {
 
-    [BepInPlugin(__GUID__, __NAME__, "1.2.0")]
+    [BepInPlugin(__GUID__, __NAME__, "1.2.1")]
     public class PLFN : BaseUnityPlugin
     {
         public const string __NAME__ = "PlanetFinder";

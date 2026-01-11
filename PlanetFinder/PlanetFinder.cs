@@ -63,7 +63,7 @@ namespace PlanetFinderMod
             tidalLockedPrefix = Config.Bind("UI", "tidalLockedPrefix", "[TL]",
                 "tidal locked prefix default is [TL]");
             mainWindowSize = Config.Bind("UI", "mainWindowSize", 8f,
-                "Main window row size (4-16)");
+                "Main window row size (4-40)");
 
             integrationWithDSPStarMapMemo = Config.Bind("Integration", "integrationWithDSPStarMapMemo", false,
                 "Display icons set by DSPStarMapMemo");

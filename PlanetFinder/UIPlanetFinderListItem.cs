@@ -99,7 +99,7 @@ namespace PlanetFinderMod
             UIResAmountEntry src =GameObject.Instantiate<UIResAmountEntry>(UIRoot.instance.uiGame.planetDetail.entryPrafab, baseTrans);
             src.gameObject.SetActive(true);
 
-            float rightPadding = 0f;
+            float rightPadding = 22f;
             float leftPadding = 22f;
 
             //locate button

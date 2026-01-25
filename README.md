@@ -41,6 +41,13 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
+### v1.2.2
+- Fix layout for 0.10.34.28281
+- Known issue: Icons are not rendering properly
+
+<details>
+<summary>Previous Changelog</summary>
+
 ### v1.2.1
 - Increase window size limit and fix list item positioning (by FyisFe)
 
@@ -49,10 +56,6 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 - Suppress error
 - CruiseAssist integration supports CAAP_N 
 - Remove the check for Universe Exploration
-- Known issue: Icons are not rendering properly
-
-<details>
-<summary>Previous Changelog</summary>
 
 ### v1.1.9
 - Better quality fixes for game version 0.10.32.25779

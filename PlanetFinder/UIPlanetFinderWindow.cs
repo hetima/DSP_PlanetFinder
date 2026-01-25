@@ -382,6 +382,10 @@ namespace PlanetFinderMod
             SetUpData();
             //UIRoot.instance.uiGame.ShutPlayerInventory();
             MyWindowCtl.OpenWindow(this);
+            if (windowTrans != null)
+            {
+                windowTrans.sizeDelta = WindowSize();
+            }
         }
 
 

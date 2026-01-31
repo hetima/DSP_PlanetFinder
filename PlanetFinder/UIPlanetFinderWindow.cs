@@ -149,6 +149,8 @@ namespace PlanetFinderMod
         public StringBuilder sb;
         public StringBuilder sbOil;
         public StringBuilder sbWatt;
+        public StringBuilder sbWatt2;
+        public StringBuilder sbWatt3;
 
         internal bool _eventLock;
         public bool isPointEnter;
@@ -482,7 +484,9 @@ namespace PlanetFinderMod
             sb = new StringBuilder(sbFormat, sbFormat.Length + 2);
             sbFormat = "         /s";
             sbOil = new StringBuilder(sbFormat, sbFormat.Length + 2);
-            sbWatt = new StringBuilder("         W", 12);
+            sbWatt = new StringBuilder("         ", 12);
+            sbWatt2 = new StringBuilder("         ", 12);
+            sbWatt3 = new StringBuilder("         ", 12);
 
             //config button
             Sprite sprite = null;

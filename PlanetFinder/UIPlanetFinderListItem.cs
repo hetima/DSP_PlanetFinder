@@ -130,6 +130,7 @@ namespace PlanetFinderMod
             item.valueText.supportRichText = true;
             rect = Util.NormalizeRectWithTopLeft(item.valueText, 380f - rightPadding - leftPadding, 2f);
             rect.sizeDelta = new Vector2(100f, 24f);
+            rect.offsetMin = new Vector2(0f, rect.offsetMin.y);
             valueTextNormalColor = item.valueText.color;
             valueTextMiningColor = new Color(0.1f, 0.7f, 0.8f, valueTextNormalColor.a);
 
@@ -472,7 +473,7 @@ namespace PlanetFinderMod
                             }
                             else
                             {
-                                StringBuilderUtility.WriteKMG(sb, 15, amount, false);
+                                StringBuilderUtility.WriteKMG(sb, 15, amount, false, '\u2009', ' ');
                             }
                         }
                         string newVlue = sb.ToString();
@@ -555,14 +556,13 @@ namespace PlanetFinderMod
             }
             if (energyCapacity > 0L || energyX > 0L)
             {
-                StringBuilderUtility.WriteKMG(window.sbWatt, 8, energyRequired * 60L, false);
-                result = window.sbWatt.ToString();
-                StringBuilderUtility.WriteKMG(window.sbWatt, 8, energyCapacity * 60L, false);
-                result += " / " + window.sbWatt.ToString().Trim();
+                StringBuilderUtility.WriteKMGPower(window.sbWatt, 8, energyRequired * 60L, false, '\u2009', ' ');
+                StringBuilderUtility.WriteKMGPower(window.sbWatt2, 8, energyCapacity * 60L, false, '\u2009', ' ');
+                result = window.sbWatt.ToString() + " / " + window.sbWatt2.ToString().Trim();
                 if (energyX > 0L)
                 {
-                    StringBuilderUtility.WriteKMG(window.sbWatt, 8, energyX * 60L, false);
-                    result += " + " + window.sbWatt.ToString().Trim();
+                    StringBuilderUtility.WriteKMGPower(window.sbWatt3, 8, energyX * 60L, false, '\u2009', ' ');
+                    result += " + " + window.sbWatt3.ToString().Trim();
                 }
                 double ratio = (double)energyRequired / (double)(energyCapacity + energyX);
                 if (ratio > 0.9f)

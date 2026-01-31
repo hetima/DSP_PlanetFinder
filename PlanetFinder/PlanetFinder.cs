@@ -189,8 +189,7 @@ namespace PlanetFinderMod
                 planetData.overrideName = newName;
 
                 GameMain.gameScenario?.NotifyOnPlanetNameChange();
-                planetData.NotifyOnDisplayNameChange();
-                GameMain.galaxy.NotifyAstroNameChange();
+                GameMain.galaxy.NotifyAstroNameChange(planetData.astroId);
             }
             else
             {
@@ -214,8 +213,7 @@ namespace PlanetFinderMod
                     planetData.overrideName = newName;
                 }
                 GameMain.gameScenario?.NotifyOnPlanetNameChange();
-                planetData.NotifyOnDisplayNameChange();
-                GameMain.galaxy.NotifyAstroNameChange();
+                GameMain.galaxy.NotifyAstroNameChange(planetData.astroId);
             }
 
         }

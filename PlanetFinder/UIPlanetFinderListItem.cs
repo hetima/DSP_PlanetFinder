@@ -96,7 +96,8 @@ namespace PlanetFinderMod
             baseTrans.sizeDelta = new Vector2(600f, 24f);
             baseTrans.localScale = Vector3.one;
 
-            UIResAmountEntry src =GameObject.Instantiate<UIResAmountEntry>(UIRoot.instance.uiGame.planetDetail.entryPrafab, baseTrans);
+            UIPlanetDetail planetDetail = UIRoot.instance.uiGame.planetDetail;
+            UIResAmountEntry src = GameObject.Instantiate<UIResAmountEntry>(planetDetail.entryPrafab, baseTrans);
             src.gameObject.SetActive(true);
 
             float rightPadding = 22f;
@@ -120,6 +121,7 @@ namespace PlanetFinderMod
             //nameText
             item.nameText = src.labelText;
             item.nameText.text = "";
+            item.nameText.iconMapping = planetDetail.nameInput.textComponent.iconMapping;
             item.nameText.fontSize = 16;
             item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f);
 

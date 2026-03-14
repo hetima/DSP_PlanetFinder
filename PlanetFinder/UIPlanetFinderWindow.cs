@@ -407,7 +407,7 @@ namespace PlanetFinderMod
             {
                 rows = 40f;
             }
-            return new Vector2(640, 174 + 28 * rows);
+            return new Vector2(PLFN.WINDOW_WIDTH, 174 + 28 * rows);
         }
         private void PopulateItem(MonoBehaviour item, int rowIndex)
         {
@@ -435,12 +435,6 @@ namespace PlanetFinderMod
 
             planetListView = MyListView.CreateListView(UIPlanetFinderListItem.CreateListViewPrefab(), PopulateItem, "list-view");
             Util.NormalizeRectWithMargin(planetListView.transform, 0f, 0f, 0f, 0f, bg.transform);
-            RectTransform listRect = planetListView.transform as RectTransform;
-            listRect.anchoredPosition = new Vector2(134.3541f, -0.0001f);
-            listRect.pivot = new Vector2(0.5f, 0.5f);
-            listRect.sizeDelta = new Vector2(256f, 0f);
-            listRect.anchorMin = new Vector2(0, 0);
-            listRect.anchorMax = new Vector2(1, 1);
             //ここでサイズ調整…
             //(planetListView.m_ItemRes.com_data.transform as RectTransform).sizeDelta = new Vector2(600f, 24f);
             planetListView.m_ScrollRect.scrollSensitivity = 28f;
@@ -501,7 +495,7 @@ namespace PlanetFinderMod
                 }
             }
             UIButton configBtn = Util.MakeIconButtonC(sprite, 32f);
-            configBtn.button.onClick.AddListener(new UnityAction(this.OnConfigButtonClick));
+            configBtn.button.onClick.AddListener(OnConfigButtonClick);
             rect = Util.NormalizeRectWithTopLeft(configBtn, 158f, 20f, windowTrans);
             configBtn.gameObject.name = "config-button";
             configBtn.gameObject.SetActive(true);
@@ -608,6 +602,12 @@ namespace PlanetFinderMod
 
         public override void _OnOpen()
         {
+            // Reset list view size
+            var listViewRect = planetListView.transform.GetComponent<RectTransform>();
+            listViewRect.sizeDelta = Vector2.zero;
+            listViewRect.offsetMin = Vector2.zero;
+            listViewRect.offsetMax = Vector2.zero;
+
             searchField.onValueChanged.AddListener(new UnityAction<string>(this.OnSearchFieldValueChanged));
             searchField.onEndEdit.AddListener(new UnityAction<string>(OnSearchFieldEndEdit));
         }
@@ -1238,14 +1238,7 @@ namespace PlanetFinderMod
             switch ((EMenuCommand)obj)
             {
                 case EMenuCommand.OpenStarmap:
-                    if (menuTarget.planetData != null)
-                    {
-                        PLFN.LocatePlanet(menuTarget.planetData.id);
-                    }
-                    else if (menuTarget.starData != null)
-                    {
-                        PLFN.LocatePlanet(0, menuTarget.starData.id);
-                    }
+                    PLFN.LocatePlanet(menuTarget.planetData, menuTarget.starData);
                     break;
                 case EMenuCommand.OpenLSTM:
                     PLFN.aLSTMIntg.OpenPlanetId(menuTarget.planetData?.id ?? 0);

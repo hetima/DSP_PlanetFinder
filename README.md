@@ -41,11 +41,14 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
+### v1.2.5
+- fix a error when click sys view button (by tpxxn)
+- Known issue: Vein icons are not rendering properly
+
 ### v1.2.4
 - Display icons included in planet names (by tpxxn)
 - Added view planet button (original locate button function) (by tpxxn)
 - Fix ListView Layout (by tpxxn)
-- Known issue: Vein icons are not rendering properly
 
 <details>
 <summary>Previous Changelog</summary>

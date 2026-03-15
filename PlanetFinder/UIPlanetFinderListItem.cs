@@ -103,14 +103,14 @@ namespace PlanetFinderMod
             UIResAmountEntry src = GameObject.Instantiate<UIResAmountEntry>(planetDetail.entryPrafab, baseTrans);
             src.gameObject.SetActive(true);
 
-            float rightPadding = 22f;
-            float leftPadding = 22f;
+            const float rightPadding = 64f;
+            const float leftPadding = 22f;
             // view button
             UIButton viewBtn = Util.MakeIconButtonB(Util.viewPlanetIcon, 22);
             if (viewBtn != null)
             {
                 viewBtn.gameObject.name = "view-btn";
-                rect = Util.NormalizeRectWithTopLeft(viewBtn, PLFN.LIST_ITEM_WIDTH - 64 - 22, 3f, baseTrans);
+                rect = Util.NormalizeRectWithTopLeft(viewBtn, PLFN.LIST_ITEM_WIDTH - rightPadding - 22, 3f, baseTrans);
 
                 //btn.onClick +=
                 viewBtn.tips.tipTitle = "View Planet".Translate();
@@ -124,7 +124,7 @@ namespace PlanetFinderMod
             if (locateBtn != null)
             {
                 locateBtn.gameObject.name = "locate-btn";
-                rect = Util.NormalizeRectWithTopLeft(locateBtn, PLFN.LIST_ITEM_WIDTH - 64, 3f, baseTrans);
+                rect = Util.NormalizeRectWithTopLeft(locateBtn, PLFN.LIST_ITEM_WIDTH - rightPadding, 3f, baseTrans);
 
                 //btn.onClick +=
                 locateBtn.tips.tipTitle = "Locate Planet".Translate();

@@ -107,7 +107,7 @@ namespace PlanetFinderMod
             UIRoot.instance.uiGame.ShutAllFunctionWindow();
             //UIRoot.instance.uiGame.ShutAllFullScreens();
             UIRoot.instance.uiGame.OpenStarmap();
-            int starIdx = planet != null ? planet.id / 100 : 0;
+            int starIdx = planet != null ? planet.id / 100 : star.id;
             int planetIdx = planet != null ? planet.id % 100 : 0;
             UIStarmap map = UIRoot.instance.uiGame.starmap;
             //PlanetData planet = GameMain.galaxy.PlanetById(planetId);

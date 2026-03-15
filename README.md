@@ -10,7 +10,7 @@ The scope of the list can be narrowed down by "all star system", "all planets", 
 Resources can be multi-selected by shift-clicking, narrowing down the list of planets that have all the resources.
 
 The display area shows the name of the planet, distance from the current star system, and the actual number of selected resources and approximate number of chunks of veins. The power status can also be displayed and switched to resource information by pressing the Tab key. If the electricity supply-demand ratio exceeds 90%, an orange display warns.  
-Clicking the arrow button displays the planet in the starmap view.  
+Clicking the magnifying glass button displays the planet in the starmap view.  
 Right-clicking a row brings up a panel offering various functions.
 
 ## Attention
@@ -30,7 +30,7 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 資源はシフトクリックすると複数選択することができ、すべての資源が揃った惑星を絞り込みます。
 
 検索結果表示部分には惑星の名前、現在の星系からの距離、選択した資源の実数とおおまかな鉱脈の数が表示されます。電力の状態も表示でき、Tabキーを押すことで資源の情報と切り替わります。電力需給率が90%を超えていたらオレンジ色の表示で警告します。  
-矢印のボタンをクリックするとその惑星を星図ビューで表示します。  
+虫眼鏡のボタンをクリックするとその惑星を星図ビューで表示します。  
 リストを右クリックすると様々な機能を提供するパネルを表示します。
 
 ## ご注意
@@ -41,12 +41,17 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
-### v1.2.3
-- Fix for 0.10.34.28392
-- Known issue: Icons are not rendering properly
+### v1.2.4
+- Display icons included in planet names (by tpxxn)
+- Added view planet button (original locate button function) (by tpxxn)
+- Fix ListView Layout (by tpxxn)
+- Known issue: Vein icons are not rendering properly
 
 <details>
 <summary>Previous Changelog</summary>
+
+### v1.2.3
+- Fix for 0.10.34.28392
 
 ### v1.2.2
 - Fix layout for 0.10.34.28281

@@ -75,6 +75,9 @@ namespace PlanetFinderMod
         public UIButton iconButton;
 
         [SerializeField]
+        public UIButton viewBtn;
+
+        [SerializeField]
         public UIButton locateBtn;
 
         [SerializeField]
@@ -85,41 +88,56 @@ namespace PlanetFinderMod
         public static UIPlanetFinderListItem CreateListViewPrefab()
         {
             RectTransform rect;
-            UIPlanetFinderListItem item = Util.CreateGameObject<UIPlanetFinderListItem>("list-item", 600f, 24f);
-            Image bg = Util.CreateGameObject<Image>("list-item", 600f, 24f);
+            UIPlanetFinderListItem item = Util.CreateGameObject<UIPlanetFinderListItem>("list-item", PLFN.LIST_ITEM_WIDTH, 24f);
+            Image bg = Util.CreateGameObject<Image>("list-item", PLFN.LIST_ITEM_WIDTH, 24f);
             bg.gameObject.SetActive(true);
             RectTransform baseTrans = Util.NormalizeRectWithTopLeft(bg, 0f, 0f, item.transform);
             item.baseObj = bg.gameObject;
 
             bg.color = new Color(0.2f, 0.2f, 0.2f, 0.1f);
-            (item.transform as RectTransform).sizeDelta = new Vector2(600f, 24f);
-            baseTrans.sizeDelta = new Vector2(600f, 24f);
+            (item.transform as RectTransform)!.sizeDelta = new Vector2(PLFN.LIST_ITEM_WIDTH, 24f);
+            baseTrans.sizeDelta = new Vector2(PLFN.LIST_ITEM_WIDTH, 24f);
             baseTrans.localScale = Vector3.one;
 
-            UIResAmountEntry src =GameObject.Instantiate<UIResAmountEntry>(UIRoot.instance.uiGame.planetDetail.entryPrafab, baseTrans);
+            UIPlanetDetail planetDetail = UIRoot.instance.uiGame.planetDetail;
+            UIResAmountEntry src = GameObject.Instantiate<UIResAmountEntry>(planetDetail.entryPrafab, baseTrans);
             src.gameObject.SetActive(true);
 
             float rightPadding = 22f;
             float leftPadding = 22f;
-
-            //locate button
-            UIButton btn = Util.MakeIconButtonB(Util.astroIndicatorIcon, 22);
-            if (btn != null)
+            // view button
+            UIButton viewBtn = Util.MakeIconButtonB(Util.viewPlanetIcon, 22);
+            if (viewBtn != null)
             {
-                btn.gameObject.name = "locate-btn";
-                rect = Util.NormalizeRectWithTopLeft(btn, 538f - rightPadding, 3f, baseTrans);
+                viewBtn.gameObject.name = "view-btn";
+                rect = Util.NormalizeRectWithTopLeft(viewBtn, PLFN.LIST_ITEM_WIDTH - 64 - 22, 3f, baseTrans);
 
                 //btn.onClick +=
-                btn.tips.tipTitle = "Locate Planet".Translate();
-                btn.tips.tipText = "Show the planet on the starmap.".Translate();
-                btn.tips.corner = 3;
-                btn.tips.offset = new Vector2(18f, -20f);
-                item.locateBtn = btn;
+                viewBtn.tips.tipTitle = "View Planet".Translate();
+                viewBtn.tips.tipText = "Show the planet on the starmap.".Translate();
+                viewBtn.tips.corner = 3;
+                viewBtn.tips.offset = new Vector2(18f, -20f);
+                item.viewBtn = viewBtn;
+            }
+            //locate button
+            UIButton locateBtn = Util.MakeIconButtonB(Util.astroIndicatorIcon, 22);
+            if (locateBtn != null)
+            {
+                locateBtn.gameObject.name = "locate-btn";
+                rect = Util.NormalizeRectWithTopLeft(locateBtn, PLFN.LIST_ITEM_WIDTH - 64, 3f, baseTrans);
+
+                //btn.onClick +=
+                locateBtn.tips.tipTitle = "Locate Planet".Translate();
+                locateBtn.tips.tipText = "Locate the planet.".Translate();
+                locateBtn.tips.corner = 3;
+                locateBtn.tips.offset = new Vector2(18f, -20f);
+                item.locateBtn = locateBtn;
             }
 
             //nameText
             item.nameText = src.labelText;
             item.nameText.text = "";
+            item.nameText.iconMapping = planetDetail.nameInput.textComponent.iconMapping;
             item.nameText.fontSize = 16;
             item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f);
 
@@ -128,7 +146,7 @@ namespace PlanetFinderMod
             item.valueText.text = "";
             item.valueText.color = item.nameText.color;
             item.valueText.supportRichText = true;
-            rect = Util.NormalizeRectWithTopLeft(item.valueText, 380f - rightPadding - leftPadding, 2f);
+            rect = Util.NormalizeRectWithTopLeft(item.valueText, PLFN.LIST_ITEM_WIDTH - 300f + leftPadding, 2f);
             rect.sizeDelta = new Vector2(100f, 24f);
             rect.offsetMin = new Vector2(0f, rect.offsetMin.y);
             valueTextNormalColor = item.valueText.color;
@@ -138,14 +156,14 @@ namespace PlanetFinderMod
             item.valueSketchText = GameObject.Instantiate<Text>(item.valueText, item.valueText.transform.parent);
             item.valueSketchText.gameObject.name = "valueSketchText";
             item.valueSketchText.alignment = TextAnchor.MiddleLeft;
-            rect = Util.NormalizeRectWithTopLeft(item.valueSketchText, 504f - rightPadding - leftPadding, 2f);
-            rect.sizeDelta = new Vector2(24f, 24f);
+            rect = Util.NormalizeRectWithTopLeft(item.valueSketchText, PLFN.LIST_ITEM_WIDTH - 176f + leftPadding, 2f);
+            rect.sizeDelta = new Vector2(34f, 24f);
 
             //veinIcon
             item.veinIcon = src.iconImage;
             if (item.veinIcon != null)
             {
-                rect = Util.NormalizeRectWithTopLeft(item.veinIcon, 482f - rightPadding - leftPadding, 2f);
+                rect = Util.NormalizeRectWithTopLeft(item.veinIcon, PLFN.LIST_ITEM_WIDTH - 198f + leftPadding, 2f);
                 item.veinIcon.enabled = false;
 
                 //labelIcon
@@ -173,6 +191,8 @@ namespace PlanetFinderMod
 
         void Start()
         {
+            viewBtn.onClick += OnViewButtonClick;
+            viewBtn.gameObject.SetActive(false);
             locateBtn.onClick += OnLocateButtonClick;
             locateBtn.gameObject.SetActive(false);
         }
@@ -301,15 +321,14 @@ namespace PlanetFinderMod
             }
         }
 
+        void OnViewButtonClick(int obj)
+        {
+            PLFN.ViewPlanet(planetData, starData);
+        }
+
         private void OnLocateButtonClick(int obj)
         {
-            if (planetData != null) {
-                PLFN.LocatePlanet(planetData.id);
-            }
-            else if (starData != null)
-            {
-                PLFN.LocatePlanet(0, starData.id);
-            }
+            PLFN.LocatePlanet(planetData, starData);
         }
 
         public static int veinCount = 15;
@@ -601,6 +620,7 @@ namespace PlanetFinderMod
         {
             if (!disableUIAction)
             {
+                viewBtn.gameObject.SetActive(true);
                 locateBtn.gameObject.SetActive(true);
             }
         }
@@ -609,6 +629,7 @@ namespace PlanetFinderMod
         {
             if (!disableUIAction)
             {
+                viewBtn.gameObject.SetActive(false);
                 locateBtn.gameObject.SetActive(false);
             }
         }

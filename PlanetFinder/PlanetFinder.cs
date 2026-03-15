@@ -1,4 +1,5 @@
 ﻿//using System.Text;
+
 using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Configuration;
@@ -12,7 +13,6 @@ using static PlanetFinderMod.UIPlanetFinderWindow;
 
 namespace PlanetFinderMod
 {
-
     [BepInPlugin(__GUID__, __NAME__, "1.2.3")]
     public class PLFN : BaseUnityPlugin
     {
@@ -21,6 +21,9 @@ namespace PlanetFinderMod
 
         new internal static ManualLogSource Logger;
 
+        public const float LIST_ITEM_WIDTH = 640f;
+        public const float WINDOW_WIDTH = 680f;
+        
         public static UIPlanetFinderWindow planetFinder;
         public static UIConfigWindow _configWin;
         public static List<PlanetData> recentPlanets;
@@ -81,27 +84,31 @@ namespace PlanetFinderMod
             Logger.LogInfo(str);
         }
 
+        public static void LogWarning(string str)
+        {
+            Logger.LogWarning(str);
+        }
+
         public static void UniverseExplorationRequired()
         {
             UIMessageBox b = UIMessageBox.Show("Upgrades Required".Translate(), "To use this feature, Universe Exploration 4 is required.".Translate(), "OK", 0);
         }
 
-        public static void LocatePlanet(int planetId, int starId = 0)
+        public static void ViewPlanet(PlanetData planet = null, StarData star = null)
         {
-            if (planetId <= 0 && starId <= 0)
+            if (planet == null && star == null)
             {
                 return;
             }
             //planetFinder.keepOpen = true;
             //int local = GameMain.localPlanet != null ? GameMain.localPlanet.id : 0;
 
-
             UIRoot.instance.uiGame.ShutPlayerInventory();
             UIRoot.instance.uiGame.ShutAllFunctionWindow();
             //UIRoot.instance.uiGame.ShutAllFullScreens();
             UIRoot.instance.uiGame.OpenStarmap();
-            int starIdx = planetId > 0 ? planetId / 100 : starId;
-            int planetIdx = planetId > 0 ? planetId % 100 : 0;
+            int starIdx = planet != null ? planet.id / 100 : 0;
+            int planetIdx = planet != null ? planet.id % 100 : 0;
             UIStarmap map = UIRoot.instance.uiGame.starmap;
             //PlanetData planet = GameMain.galaxy.PlanetById(planetId);
             //if (planet != null){}
@@ -124,11 +131,26 @@ namespace PlanetFinderMod
                     //map.focusStar = map.starUIs[starIdx - 1]; //
                 }
             }
-                
 
             //_win.keepOpen = false;
         }
 
+        public static void LocatePlanet(PlanetData planet = null, StarData star = null)
+        {
+            if (planet != null)
+            {
+                GameMain.mainPlayer.navigation.indicatorAstroId = planet.id;
+            }
+            else if (star != null)
+            {
+                GameMain.mainPlayer.navigation.indicatorAstroId = star.id * 100;
+            }
+            else
+            {
+                GameMain.mainPlayer.navigation.indicatorAstroId = 0;
+            }
+        }
+     
         public static void TogglePlanetFinderWindow()
         {
             //int itemId = Util.ItemIdHintUnderMouse();
@@ -215,7 +237,6 @@ namespace PlanetFinderMod
                 GameMain.gameScenario?.NotifyOnPlanetNameChange();
                 GameMain.galaxy.NotifyAstroNameChange(planetData.astroId);
             }
-
         }
 
         private void Update()

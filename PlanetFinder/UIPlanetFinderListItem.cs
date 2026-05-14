@@ -160,26 +160,28 @@ namespace PlanetFinderMod
             rect.sizeDelta = new Vector2(34f, 24f);
 
             //veinIcon
-            item.veinIcon = src.iconImage;
-            if (item.veinIcon != null)
-            {
-                rect = Util.NormalizeRectWithTopLeft(item.veinIcon, PLFN.LIST_ITEM_WIDTH - 198f + leftPadding, 2f);
-                item.veinIcon.enabled = false;
+            GameObject.Destroy(src.iconImage);
 
-                //labelIcon
-                item.labelIcon = GameObject.Instantiate<Image>(item.veinIcon, baseTrans);
-                item.labelIcon.gameObject.name = "labelIcon";
-                rect = Util.NormalizeRectWithTopLeft(item.labelIcon, 16f, 12f);
-                rect.pivot = new Vector2(0.5f, 0.5f);
-                rect.sizeDelta = new Vector2(24f, 24f);
-                rect.localScale = new Vector3(0.3f, 0.3f, 1f);
+            item.veinIcon = Util.CreateGameObject<Image>("veinIcon", 24f, 24f);
+            item.veinIcon.transform.SetParent(item.nameText.transform.parent, false);
+            item.veinIcon.material = null;
+            rect = Util.NormalizeRectWithTopLeft(item.veinIcon, PLFN.LIST_ITEM_WIDTH - 256f + leftPadding, 12f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            item.veinIcon.enabled = false;
 
-                item.labelIcon.material = null; //これのせいでめっちゃ光る
-                UIStationWindow stationWindow = UIRoot.instance.uiGame.stationWindow;
-                circleSprite = stationWindow.storageUIPrefab.transform.Find("storage-icon-empty/white")?.GetComponent<Image>()?.sprite;
-                item.labelIcon.sprite = circleSprite;
-                item.labelIcon.enabled = true;
-            }
+            //labelIcon
+            item.labelIcon = Util.CreateGameObject<Image>("labelIcon", 24f, 24f); 
+            item.labelIcon.transform.SetParent(item.nameText.transform.parent, false);
+            item.labelIcon.gameObject.name = "labelIcon";
+            rect = Util.NormalizeRectWithTopLeft(item.labelIcon, 16f, 12f);
+            rect.pivot = new Vector2(0.5f, 0.5f);
+            item.labelIcon.material = null;
+
+            UIStationWindow stationWindow = UIRoot.instance.uiGame.stationWindow;
+            circleSprite = stationWindow.storageUIPrefab.transform.Find("storage-icon-empty/white")?.GetComponent<Image>()?.sprite;
+            item.labelIcon.sprite = circleSprite;
+            item.labelIcon.enabled = true;
+
 
             item.iconHide = src.iconHide;
             item.iconButton = src.iconButton;

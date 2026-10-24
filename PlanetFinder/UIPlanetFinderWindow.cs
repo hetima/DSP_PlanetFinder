@@ -135,6 +135,10 @@ namespace PlanetFinderMod
         public RectTransform contentTrans;
         public bool needsReflesh;
 
+        //always on top
+        public static bool pinned;
+        public UIButton pinBtn;
+
         public Scope scope;
         public List<UIButton> scopeButtons;
         public int targetItemId;
@@ -407,7 +411,12 @@ namespace PlanetFinderMod
             {
                 rows = 40f;
             }
-            return new Vector2(PLFN.WINDOW_WIDTH, 174 + 28 * rows);
+            //fixed part + one row per configured line.
+            //A row of the list occupies 28px (24px row + 4px spacing).
+            //The fixed part is kept small on purpose: making the window taller was found to push the
+            //list content up (clipping the first row and leaking the next row at the bottom), so the
+            //vertical alignment is tuned with listTopMargin below instead.
+            return new Vector2(PLFN.WINDOW_WIDTH, 170 + 28 * rows);
         }
         private void PopulateItem(MonoBehaviour item, int rowIndex)
         {
@@ -434,7 +443,11 @@ namespace PlanetFinderMod
             Util.NormalizeRectWithMargin(bg, 70f, 0f, 20f, 16f, contentTrans);
 
             planetListView = MyListView.CreateListView(UIPlanetFinderListItem.CreateListViewPrefab(), PopulateItem, "list-view");
-            Util.NormalizeRectWithMargin(planetListView.transform, 0f, 0f, 0f, 0f, bg.transform);
+            //the list gets a top margin so that the top of the first row is not clipped by the list area.
+            //This is the knob to tune the row alignment: the matching window height change is done with
+            //the fixed part of WindowSize(), so that the visible row count stays the same.
+            const float listTopMargin = 6f;
+            Util.NormalizeRectWithMargin(planetListView.transform, listTopMargin, 0f, 0f, 0f, bg.transform);
             //ここでサイズ調整…
             //(planetListView.m_ItemRes.com_data.transform as RectTransform).sizeDelta = new Vector2(600f, 24f);
             planetListView.m_ScrollRect.scrollSensitivity = 28f;
@@ -494,6 +507,25 @@ namespace PlanetFinderMod
                     sprite = warnImg.sprite;
                 }
             }
+
+            //pin button: left of the config button. While pinned the window ignores ESC and is kept
+            //in front of the other UI layers (see TryClose / _OnUpdate).
+            pinned = false;
+            pinBtn = Util.MakeHiliteTextButton("Pin", 36f, 20f);
+            //MakeHiliteTextButton only hides the frame when it computes the size itself
+            pinBtn.transform.Find("frame")?.gameObject.SetActive(false);
+            pinBtn.button.onClick.AddListener(OnPinButtonClick);
+            //top is chosen so that the button's centre (top + 10) matches the centre of the 32px
+            //config button next to it (20 + 16)
+            Util.NormalizeRectWithTopLeft(pinBtn, 118f, 26f, windowTrans);
+            pinBtn.gameObject.name = "pin-button";
+            pinBtn.gameObject.SetActive(true);
+            pinBtn.tips.tipTitle = "Always On Top";
+            pinBtn.tips.tipText = "Pin the window: it will not be closed by ESC or covered by other panels.";
+            pinBtn.tips.corner = 3;
+            pinBtn.tips.offset = new Vector2(18f, -20f);
+            UpdatePinButton();
+
             UIButton configBtn = Util.MakeIconButtonC(sprite, 32f);
             configBtn.button.onClick.AddListener(OnConfigButtonClick);
             rect = Util.NormalizeRectWithTopLeft(configBtn, 158f, 20f, windowTrans);
@@ -562,6 +594,47 @@ namespace PlanetFinderMod
         private void OnConfigButtonClick()
         {
             PLFN._configWin.OpenWindow();
+        }
+
+        /// <summary>
+        /// Pin toggle: while pinned the window refuses to close and is drawn on top of the other UI.
+        /// </summary>
+        private void OnPinButtonClick()
+        {
+            pinned = !pinned;
+            UpdatePinButton();
+        }
+
+        private void UpdatePinButton()
+        {
+            if (pinBtn != null)
+            {
+                //only the game's own highlight state, the label text stays the same
+                pinBtn.highlighted = pinned;
+            }
+            ApplyPinOrder();
+        }
+
+        /// <summary>
+        /// Keeps this window as the last sibling, so it is drawn above its siblings (the other game
+        /// panels are siblings under the same canvas).
+        /// </summary>
+        private void ApplyPinOrder()
+        {
+            if (!pinned || windowTrans == null)
+            {
+                return;
+            }
+            windowTrans.SetAsLastSibling();
+            //another panel may have closed or hidden this window; while pinned it is forced back
+            if (!active)
+            {
+                MyWindowCtl.OpenWindow(this);
+            }
+            else if (!windowTrans.gameObject.activeSelf)
+            {
+                windowTrans.gameObject.SetActive(true);
+            }
         }
 
         public override void _OnDestroy()
@@ -638,10 +711,20 @@ namespace PlanetFinderMod
                 {
                     popupMenuBase.SetActive(false);
                 }
+                else if (pinned)
+                {
+                    //pinned: ESC must not close this window. The key is still consumed above, so it
+                    //does not fall through to other panels.
+                }
                 else
                 {
                     base._Close();
                 }
+            }
+            if (pinned)
+            {
+                //re-assert the order, in case another panel was opened in the meantime
+                ApplyPinOrder();
             }
             if (_eventLock)
             {
@@ -682,6 +765,11 @@ namespace PlanetFinderMod
 
         public void TryClose()
         {
+            if (pinned)
+            {
+                //the title bar close button must not close a pinned window either
+                return;
+            }
             base._Close();
         }
         //ホイールズーム対策用 UITutorialWindowなどの真似
@@ -765,6 +853,13 @@ namespace PlanetFinderMod
 
 
         public const int veinCount = 15;
+
+        //gas giant and ice giant are both EPlanetType.Gas and are marked with the same prefix in the list
+        public static bool IsGasGiant(PlanetData planetData)
+        {
+            return planetData != null && planetData.type == EPlanetType.Gas;
+        }
+
         public bool IsTargetPlanet(PlanetListData planetListData, int itemId)
         {
             PlanetData planet = planetListData.planetData;
@@ -1066,7 +1161,23 @@ namespace PlanetFinderMod
 
             if (_planetList.Count > 0)
             {
-                countText.text = "Result: " + _planetList.Count.ToString();
+                string result = "Result: " + _planetList.Count.ToString();
+                //scopes other than Sys list planets, so gas giants (including ice giants) can be counted here.
+                //planets marked [GAS] in the list are exactly these.
+                if (scope != Scope.System)
+                {
+                    int gasCount = 0;
+                    foreach (PlanetListData item in _planetList)
+                    {
+                        if (IsGasGiant(item.planetData))
+                        {
+                            gasCount++;
+                        }
+                    }
+                    result += "  GAS: " + gasCount.ToString();
+                    result += "  Others: " + (_planetList.Count - gasCount).ToString();
+                }
+                countText.text = result;
             }
             else
             {

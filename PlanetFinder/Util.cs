@@ -81,6 +81,24 @@ namespace PlanetFinderMod
             return rect;
         }
 
+        //クローンした要素はプレハブ由来のアンカー（横ストレッチ等）を引き継ぐため、
+        //左上固定にしたうえで指定サイズちょうどに固定する
+        public static RectTransform SetFixedSizeAtTopLeft(Component cmp, float left, float top, float width, float height, Transform parent = null)
+        {
+            RectTransform rect = cmp.transform as RectTransform;
+            if (parent != null)
+            {
+                rect.SetParent(parent, false);
+            }
+            rect.anchorMin = new Vector2(0f, 1f);
+            rect.anchorMax = new Vector2(0f, 1f);
+            rect.pivot = new Vector2(0f, 1f);
+            rect.sizeDelta = new Vector2(width, height);
+            //last, so the top left corner ends up exactly at (left, -top)
+            rect.anchoredPosition = new Vector2(left, -top);
+            return rect;
+        }
+
         public static RectTransform NormalizeRectWithBottomLeft(Component cmp, float left, float bottom, Transform parent = null)
         {
             RectTransform rect = cmp.transform as RectTransform;

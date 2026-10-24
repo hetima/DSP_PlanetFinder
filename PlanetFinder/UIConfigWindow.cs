@@ -137,12 +137,15 @@ namespace PlanetFinderMod
             AddElement(rect, 26f);
             rect = MyCheckBox.CreateCheckBox(PLFN.showPrefix, "Show [GAS] [TL] Prefix");
             AddElement(rect, 26f);
-            
-            
+            rect = MyCheckBox.CreateCheckBox(PLFN.showLocateButtonInList, "Show Locate Button In List");
+            AddElement(rect, 26f);
+
             x_ = 290f;
             y_ = 0f;
 
             rect = MyCheckBox.CreateCheckBox(PLFN.showFavButtonInStarmap, "Show Fav Button In Starmap");
+            AddElement(rect, 26f);
+            rect = MyCheckBox.CreateCheckBox(PLFN.distanceTextSmallFont, "Small Font For Distance");
             AddElement(rect, 26f);
 
             if (PLFN.aDSPStarMapMemoIntg.canGetSignalIconId)

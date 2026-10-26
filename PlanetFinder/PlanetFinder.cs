@@ -21,8 +21,10 @@ namespace PlanetFinderMod
 
         new internal static ManualLogSource Logger;
 
-        public const float LIST_ITEM_WIDTH = 640f;
-        public const float WINDOW_WIDTH = 680f;
+        //the window is 110px wider than upstream so that the power state text (which overflows to the
+        //left from its right aligned box) clears the distance text even in its longest form
+        public const float LIST_ITEM_WIDTH = 750f;
+        public const float WINDOW_WIDTH = 790f;
         
         public static UIPlanetFinderWindow planetFinder;
         public static UIConfigWindow _configWin;
@@ -34,6 +36,8 @@ namespace PlanetFinderMod
         public static ConfigEntry<bool> showFavButtonInStarmap;
         public static ConfigEntry<bool> showPowerState;
         public static ConfigEntry<bool> showPrefix;
+        public static ConfigEntry<bool> showLocateButtonInList;
+        public static ConfigEntry<bool> distanceTextSmallFont;
         public static ConfigEntry<string> gasGiantPrefix;
         public static ConfigEntry<string> tidalLockedPrefix;
         public static ConfigEntry<float> mainWindowSize;
@@ -61,6 +65,10 @@ namespace PlanetFinderMod
                 "show power consumption");
             showPrefix = Config.Bind("UI", "showPrefix", true,
                 "show prefix [GAS] and [TL]");
+            showLocateButtonInList = Config.Bind("UI", "showLocateButtonInList", true,
+                "show the locate planet button on each list row");
+            distanceTextSmallFont = Config.Bind("UI", "distanceTextSmallFont", false,
+                "use the same font size for the distance text as for the vein amount");
             gasGiantPrefix = Config.Bind("UI", "gasGiantPrefix", "[GAS]",
                 "gas giant prefix default is [GAS]");
             tidalLockedPrefix = Config.Bind("UI", "tidalLockedPrefix", "[TL]",
@@ -257,7 +265,9 @@ namespace PlanetFinderMod
             }
             else if (VFInput._closePanelE)
             {
-                if (planetFinder.active)
+                //E is the game's "close panel" key and also opens the inventory. While the window is
+                //pinned it must not be closed by it.
+                if (planetFinder.active && !UIPlanetFinderWindow.pinned)
                 {
                     planetFinder._Close();
                 }

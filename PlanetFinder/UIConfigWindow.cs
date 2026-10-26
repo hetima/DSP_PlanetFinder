@@ -36,14 +36,14 @@ namespace PlanetFinderMod
             MyWindowCtl.OpenWindow(this);
             if (windowTrans != null)
             {
-                windowTrans.sizeDelta = new Vector2(640f, 376f);
+                windowTrans.sizeDelta = new Vector2(640f, 484f);
             }
         }
 
         public override void _OnCreate()
         {
             windowTrans = MyWindowCtl.GetRectTransform(this);
-            windowTrans.sizeDelta = new Vector2(640f, 376f);
+            windowTrans.sizeDelta = new Vector2(640f, 484f);
 
             CreateUI();
         }
@@ -61,13 +61,13 @@ namespace PlanetFinderMod
             {
                 GameObject tab = new GameObject();
                 RectTransform tabRect = tab.AddComponent<RectTransform>();
-                Util.NormalizeRectWithMargin(tabRect, 54f + 28f, 36f, 0f, 0f, windowTrans);
+                Util.NormalizeRectWithMargin(tabRect, 48f, 36f, 0f, 0f, windowTrans);
                 tab.name = "tab-" + tabIndex_.ToString();
                 //tab button
                 UIDESwarmPanel swarmPanel = UIRoot.instance.uiGame.dysonEditor.controlPanel.hierarchy.swarmPanel;
                 UIButton src = swarmPanel.orbitButtons[0];
                 UIButton btn = GameObject.Instantiate<UIButton>(src);
-                RectTransform btnRext = Util.NormalizeRectWithTopLeft(btn, tabx_, 54f, windowTrans);
+                RectTransform btnRext = Util.NormalizeRectWithTopLeft(btn, tabx_, 44f, windowTrans);
                 btnRext.sizeDelta = new Vector2(100f, 24f);
                 //(btn.transform.Find("frame").transform as RectTransform).sizeDelta = btnRext.sizeDelta;
                 btn.transform.Find("frame").gameObject.SetActive(false);
@@ -138,6 +138,31 @@ namespace PlanetFinderMod
             rect = MyCheckBox.CreateCheckBox(PLFN.showPrefix, "Show [GAS] [TL] Prefix");
             AddElement(rect, 26f);
             rect = MyCheckBox.CreateCheckBox(PLFN.showLocateButtonInList, "Show Locate Button In List");
+            AddElement(rect, 26f);
+
+            rect = MyCheckBox.CreateCheckBox(PLFN.showVeinCellCount, "Show Vein Cell Count");
+            AddElement(rect, 26f);
+            rect = MyCheckBox.CreateCheckBox(PLFN.showVeinGroupCount, "Show Vein Group Count");
+            AddElement(rect, 26f);
+            RectTransform reusedRect = MyCheckBox.CreateCheckBox(PLFN.countReusedVeinGroups, "Count Reused Vein Groups");
+            AddElement(reusedRect, 26f);
+
+            //"Count Reused Vein Groups" only makes sense while the vein group count is shown,
+            //so it is disabled and dimmed while that option is off
+            MyCheckBox reusedBox = reusedRect.GetComponent<MyCheckBox>();
+            void SyncReusedBox()
+            {
+                if (reusedBox != null)
+                {
+                    reusedBox.SetInteractable(PLFN.showVeinGroupCount.Value);
+                }
+            }
+            PLFN.showVeinGroupCount.SettingChanged += (sender, args) => SyncReusedBox();
+            SyncReusedBox();
+
+            rect = MyCheckBox.CreateCheckBox(PLFN.highlightHighDeuteriumRate, "Highlight High Deuterium Rate");
+            AddElement(rect, 26f);
+            rect = MyCheckBox.CreateCheckBox(PLFN.showPlanetThumbnail, "Show Planet Thumbnail");
             AddElement(rect, 26f);
 
             x_ = 290f;

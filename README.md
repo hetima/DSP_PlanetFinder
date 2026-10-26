@@ -41,11 +41,14 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
-### v1.2.6
-- Icons are now rendered correctly
+### v1.3.0
+- Improve list rows, add always-on-top pin, support 0.10.35 (by TTenYX) [details](https://github.com/hetima/DSP_PlanetFinder/pull/26)
 
 <details>
 <summary>Previous Changelog</summary>
+
+### v1.2.6
+- Icons are now rendered correctly
 
 ### v1.2.5
 - Fix a error when click sys view button (by tpxxn)

@@ -1,23 +1,22 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace PlanetFinderMod
 {
     /// <summary>
-    /// Builds a small round thumbnail for a planet out of the theme thumbnail material that the game
-    /// already loads for the starmap (ThemeProto.thumbMat[style]). Its albedo texture is an
-    /// equirectangular planet map, so it is projected onto a sphere and shaded with a fixed light.
-    /// Thumbnails are cached per (theme, style). When the game has no usable texture, null is
-    /// returned and the row keeps the plain colour dot.
+    /// Row icons taken from the artwork the game already ships.
+    /// Planets use ThemeProto.uiIconSprite (one round planet icon per theme and style).
+    /// Stars use the round-star-* sprites; those are grey glow masks, so they are tinted with the
+    /// star colour and a giant is drawn larger to be told apart from a main sequence star.
+    /// A thin outline ring is available behind a black hole icon.
     /// </summary>
     public static class PlanetThumbnail
     {
-        private const int Size = 24;
-        private const int SrcW = 96;
-        private const int SrcH = 48;
-
-        private static readonly Dictionary<long, Sprite> cache = new Dictionary<long, Sprite>();
-        private static bool loggedFallback;
+        private static readonly Dictionary<long, Sprite> planetCache = new Dictionary<long, Sprite>();
+        private static readonly Dictionary<string, Sprite> starCache = new Dictionary<string, Sprite>();
+        private static bool loggedFailure;
+        private static bool loggedSummary;
+        private static Sprite outline;
 
         public static Sprite Get(PlanetData pd)
         {
@@ -27,7 +26,7 @@ namespace PlanetFinderMod
             }
             int style = pd.style;
             long key = ((long)pd.theme << 8) | (long)(style & 0xff);
-            if (cache.TryGetValue(key, out Sprite cached))
+            if (planetCache.TryGetValue(key, out Sprite cached))
             {
                 return cached;
             }
@@ -35,120 +34,196 @@ namespace PlanetFinderMod
             Sprite sprite = null;
             try
             {
-                sprite = Build(pd.theme, style);
+                ThemeProto proto = LDB.themes.Select(pd.theme);
+                Sprite[] icons = proto?.uiIconSprite;
+                if (icons != null && icons.Length > 0)
+                {
+                    if (style < 0 || style >= icons.Length)
+                    {
+                        style = 0;
+                    }
+                    sprite = icons[style] != null ? icons[style] : icons[0];
+                }
+                if (sprite == null)
+                {
+                    LogOnce("planet icon is not available for theme " + pd.theme + " style " + pd.style
+                        + " (uiIconSprite=" + (icons == null ? "null" : icons.Length.ToString()) + "), using colour dots");
+                }
             }
             catch (System.Exception e)
             {
-                if (!loggedFallback)
-                {
-                    loggedFallback = true;
-                    PLFN.LogWarning("planet thumbnail failed, using colour dots: " + e.Message);
-                }
+                LogOnce("planet icon failed: " + e.Message);
             }
-            if (sprite == null && !loggedFallback)
-            {
-                loggedFallback = true;
-                PLFN.Log("planet thumbnail texture is not available, using colour dots");
-            }
-            cache[key] = sprite;
+            planetCache[key] = sprite;
             return sprite;
         }
 
-        private static Sprite Build(int theme, int style)
+        public static Sprite GetStar(StarData sd)
         {
-            ThemeProto proto = LDB.themes.Select(theme);
-            Material[] mats = proto?.thumbMat;
-            if (mats == null || mats.Length == 0)
+            if (sd == null)
             {
                 return null;
             }
-            if (style < 0 || style >= mats.Length)
+            string name = StarSpriteName(sd);
+            if (starCache.TryGetValue(name, out Sprite cached))
             {
-                style = 0;
-            }
-            Material mat = mats[style] != null ? mats[style] : mats[0];
-            Texture tex = PickAlbedo(mat);
-            if (tex == null)
-            {
-                return null;
-            }
-            Color[] src = ReadTexture(tex);
-            if (src == null)
-            {
-                return null;
+                return cached;
             }
 
-            Texture2D thumb = new Texture2D(Size, Size, TextureFormat.RGBA32, false);
-            Color[] dst = new Color[Size * Size];
-            Vector3 light = new Vector3(-0.45f, 0.55f, 0.7f).normalized;
-            for (int y = 0; y < Size; y++)
+            Sprite result = null;
+            try
             {
-                for (int x = 0; x < Size; x++)
+                result = Resources.Load<Sprite>(name);
+                if (result == null)
                 {
-                    float nx = (x + 0.5f) / Size * 2f - 1f;
-                    float ny = (y + 0.5f) / Size * 2f - 1f;
-                    float r2 = nx * nx + ny * ny;
-                    if (r2 >= 1f)
+                    //the sprite may only be referenced by a prefab; then take the loaded instance
+                    foreach (Sprite candidate in Resources.FindObjectsOfTypeAll<Sprite>())
                     {
-                        dst[y * Size + x] = Color.clear;
-                        continue;
+                        if (candidate != null && candidate.name == name)
+                        {
+                            result = candidate;
+                            break;
+                        }
                     }
-                    float nz = Mathf.Sqrt(1f - r2);
-                    float lon = Mathf.Atan2(nx, nz);
-                    float lat = Mathf.Asin(Mathf.Clamp(ny, -1f, 1f));
-                    int sx = Mathf.Clamp((int)((lon / (2f * Mathf.PI) + 0.5f) * (SrcW - 1)), 0, SrcW - 1);
-                    int sy = Mathf.Clamp((int)((lat / Mathf.PI + 0.5f) * (SrcH - 1)), 0, SrcH - 1);
-                    Color c = src[sy * SrcW + sx];
-                    float ndl = Mathf.Clamp01(Vector3.Dot(new Vector3(nx, ny, nz), light));
-                    float shade = 0.35f + 0.85f * ndl;
-                    c.r *= shade;
-                    c.g *= shade;
-                    c.b *= shade;
-                    c.a = r2 > 0.88f ? Mathf.Clamp01((1f - r2) / 0.12f) : 1f;
-                    dst[y * Size + x] = c;
+                }
+                if (result != null)
+                {
+                    //the star sprites are opaque glow masks with a black background; turn the brightness
+                    //into alpha so the row does not show a black square around the star
+                    Sprite clean = MakeAlphaSprite(result);
+                    if (clean != null)
+                    {
+                        result = clean;
+                    }
                 }
             }
-            thumb.SetPixels(dst);
-            thumb.Apply(false, false);
-            return Sprite.Create(thumb, new Rect(0f, 0f, Size, Size), new Vector2(0.5f, 0.5f), Size, 0, SpriteMeshType.FullRect);
+            catch (System.Exception e)
+            {
+                LogOnce("star icon failed: " + e.Message);
+            }
+            if (result == null)
+            {
+                LogOnce("star icon is not available (" + name + "), using colour dots");
+            }
+            starCache[name] = result;
+            return result;
         }
 
-        private static Texture PickAlbedo(Material mat)
+        /// <summary>
+        /// Converts an opaque glow mask (white on black) into a white sprite with the brightness as
+        /// alpha, keeping the original frame so the icon size and position do not change.
+        /// </summary>
+        private static Sprite MakeAlphaSprite(Sprite source)
         {
-            if (mat == null)
+            Texture texture = source != null ? source.texture : null;
+            if (texture == null)
             {
                 return null;
             }
-            Texture t = mat.GetTexture("_AlbedoTexture");
-            if (t == null)
-            {
-                t = mat.GetTexture("_Albedo");
-            }
-            if (t == null)
-            {
-                t = mat.GetTexture("_MainTex");
-            }
-            if (t == null)
-            {
-                t = mat.mainTexture;
-            }
-            return t;
-        }
-
-        private static Color[] ReadTexture(Texture tex)
-        {
-            RenderTexture rt = RenderTexture.GetTemporary(SrcW, SrcH, 0, RenderTextureFormat.ARGB32);
-            RenderTexture prev = RenderTexture.active;
-            Graphics.Blit(tex, rt);
+            const int size = 64;
+            RenderTexture rt = RenderTexture.GetTemporary(size, size, 0, RenderTextureFormat.ARGB32);
+            RenderTexture previous = RenderTexture.active;
+            Graphics.Blit(texture, rt);
             RenderTexture.active = rt;
-            Texture2D flat = new Texture2D(SrcW, SrcH, TextureFormat.RGBA32, false);
-            flat.ReadPixels(new Rect(0f, 0f, SrcW, SrcH), 0, 0);
+            Texture2D flat = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            flat.ReadPixels(new Rect(0f, 0f, size, size), 0, 0);
             flat.Apply(false, false);
             Color[] pixels = flat.GetPixels();
-            RenderTexture.active = prev;
+            RenderTexture.active = previous;
             RenderTexture.ReleaseTemporary(rt);
             Object.Destroy(flat);
-            return pixels;
+
+            float max = 0f;
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                float l = Mathf.Max(pixels[i].r, Mathf.Max(pixels[i].g, pixels[i].b)) * pixels[i].a;
+                if (l > max)
+                {
+                    max = l;
+                }
+            }
+            if (max <= 0.01f)
+            {
+                return null;
+            }
+
+            Texture2D icon = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] result = new Color[pixels.Length];
+            float scale = 1.15f / max;
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                float l = Mathf.Max(pixels[i].r, Mathf.Max(pixels[i].g, pixels[i].b)) * pixels[i].a;
+                result[i] = new Color(1f, 1f, 1f, Mathf.Clamp01(l * scale));
+            }
+            icon.SetPixels(result);
+            icon.Apply(false, false);
+            return Sprite.Create(icon, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect);
         }
+
+        public static string StarSpriteName(StarData sd)
+        {
+            switch (sd.type)
+            {
+                case EStarType.GiantStar:
+                    return "round-star-giant";
+                case EStarType.WhiteDwarf:
+                    return "round-star-whitedwarf";
+                case EStarType.NeutronStar:
+                    return "round-star-neutron";
+                case EStarType.BlackHole:
+                    return "round-star-blackhole";
+                default:
+                    return "round-star-mainseq";
+            }
+        }
+
+        /// <summary>
+        /// Thin white ring used as a light outline behind a black hole icon: its star colour is almost
+        /// black, so without the outline the icon disappears into the dark row.
+        /// </summary>
+        public static Sprite OutlineSprite
+        {
+            get
+            {
+                if (outline == null)
+                {
+                    outline = MakeOutline();
+                }
+                return outline;
+            }
+        }
+
+        private static Sprite MakeOutline()
+        {
+            const int size = 48;
+            Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            Color[] pixels = new Color[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = (x + 0.5f) / size * 2f - 1f;
+                    float dy = (y + 0.5f) / size * 2f - 1f;
+                    float d = Mathf.Sqrt(dx * dx + dy * dy);
+                    //a narrow ring, no wide glow, so it reads as an outline around the icon
+                    float ring = Mathf.Exp(-Mathf.Pow((d - 0.72f) / 0.055f, 2f));
+                    pixels[y * size + x] = new Color(1f, 1f, 1f, Mathf.Clamp01(ring * 0.75f));
+                }
+            }
+            tex.SetPixels(pixels);
+            tex.Apply(false, false);
+            return Sprite.Create(tex, new Rect(0f, 0f, size, size), new Vector2(0.5f, 0.5f), size, 0, SpriteMeshType.FullRect);
+        }
+
+        private static void LogOnce(string message)
+        {
+            if (loggedFailure)
+            {
+                return;
+            }
+            loggedFailure = true;
+            PLFN.LogWarning(message);
+        }
+
     }
 }

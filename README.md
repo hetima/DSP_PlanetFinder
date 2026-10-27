@@ -41,6 +41,15 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
+### v1.3.1 (by TTenYX)
+- Show the mined/total vein count in the list: `[mined/total]` for vein groups and `(mined/total)` for vein cells; the mined part of the cell count is no longer always 0
+- Add `Count Reused Vein Groups`: a vein group covered by several miners can be counted once per miner, so the mined count can exceed the total (e.g. 8/7)
+- Add options to hide the vein cell count and the vein group count; the reuse option is disabled and dimmed while the group count is hidden
+- Show the extraction speed of a gas resource in the (A/B) column and the number of orbital collectors in the [A/B] column; a high-yield deuterium resource is highlighted in deep green
+- Show the planet icon in front of the planet name using the planet pictures the game already has; black holes and neutron stars keep the colour dot and get a thin halo
+- Add a tooltip when hovering a row icon or name that shows the star/planet type, sized to the text
+- Localize the display texts and the config window labels to Chinese/English following the game language
+
 ### v1.3.0
 - Improve list rows, add always-on-top pin, support 0.10.35 (by TTenYX) [details](https://github.com/hetima/DSP_PlanetFinder/pull/26)
 

@@ -82,6 +82,10 @@ namespace PlanetFinderMod
         public Image labelIcon;
 
         [SerializeField]
+        public Image iconHalo;
+
+
+        [SerializeField]
         public Sprite iconHide;
 
         [SerializeField]
@@ -301,11 +305,38 @@ item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f)
             item.labelIcon.sprite = circleSprite;
             item.labelIcon.enabled = true;
 
+            //iconHalo: a thin ring around the colour dot of a black hole / neutron star. It is a child of
+            //the dot, centred by the anchors instead of being positioned with hand-computed offsets, so
+            //it stays concentric whatever the dot's pivot, scale or position is.
+            item.iconHalo = Util.CreateGameObject<Image>("iconHalo", 48f, 48f);
+            item.iconHalo.transform.SetParent(item.labelIcon.transform, false);
+            item.iconHalo.raycastTarget = false;
+            item.iconHalo.material = null;
+            item.iconHalo.sprite = PlanetThumbnail.OutlineSprite;
+            RectTransform haloRect = item.iconHalo.rectTransform;
+            haloRect.anchorMin = new Vector2(0.5f, 0.5f);
+            haloRect.anchorMax = new Vector2(0.5f, 0.5f);
+            haloRect.pivot = new Vector2(0.5f, 0.5f);
+            haloRect.anchoredPosition = Vector2.zero;
+            haloRect.sizeDelta = new Vector2(48f, 48f);
+            haloRect.localScale = Vector3.one;
+            item.iconHalo.color = new Color(0.70f, 0.82f, 1f, 0.5f);
+            item.iconHalo.gameObject.SetActive(false);
+
 
             item.iconHide = src.iconHide;
             item.iconButton = src.iconButton;
-            //GameObject.Destroy(src.valueText.gameObject);
-            GameObject.Destroy(src);
+
+            //row tooltip trigger: an invisible raycast area over the icon and the name
+            Image tipHit = Util.CreateGameObject<Image>("row-tip-hit", 226f, 24f);
+            tipHit.transform.SetParent(baseTrans, false);
+            tipHit.material = null;
+            tipHit.color = new Color(0f, 0f, 0f, 0f);
+            tipHit.raycastTarget = true;
+            Util.NormalizeRectWithTopLeft(tipHit, 14f, 0f);
+            RowHoverForward forward = tipHit.gameObject.AddComponent<RowHoverForward>();
+            forward.item = item;
+
             Util.NormalizeRectWithTopLeft(item, 0f, 0f);
             return item;
         }
@@ -322,13 +353,139 @@ item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f)
         }
 
         //rows are recycled, so visibility of the row buttons has to follow the current setting every time
-        private void ShowRowButtons(bool show)
+        public void ShowRowButtons(bool show)
         {
             viewBtn.gameObject.SetActive(show);
             if (locateBtn != null)
             {
                 locateBtn.gameObject.SetActive(show && PLFN.showLocateButtonInList.Value);
             }
+        }
+
+        /// <summary>
+        /// Type text shown in the row tooltip: the planet theme name (e.g. ocean planet) or the star
+        /// type in the wording of the game's info panel (e.g. blue giant (B-type)).
+        /// </summary>
+        public string ObjectTypeText()
+        {
+            if (planetData != null)
+            {
+                ThemeProto theme = LDB.themes.Select(planetData.theme);
+                string name = "";
+                if (theme != null)
+                {
+                    //ThemeProto.displayName can stay untranslated; DisplayName is the localization key,
+                    //so translate it explicitly and only fall back to the property when that fails
+                    name = Localization.Translate(theme.DisplayName);
+                    if (string.IsNullOrEmpty(name) || name == theme.DisplayName && !PLFN.IsChineseUi())
+                    {
+                        name = theme.displayName;
+                    }
+                }
+                if (IsDeuteriumRichGasGiant())
+                {
+                    name += PLFN.IsChineseUi() ? "（多重氢）" : " (Deuterium-rich)";
+                }
+                return name;
+            }
+            if (starData != null)
+            {
+                return StarTypeText(starData);
+            }
+            return "";
+        }
+
+        private static bool loggedThemeName;
+
+        private static bool IsChineseUi()
+        {
+            return Localization.CurrentLanguageLCID == Localization.LCID_ZHCN;
+        }
+
+        private static bool ContainsCjk(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] >= '\u4e00' && text[i] <= '\u9fff')
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static string StarTypeText(StarData sd)
+        {
+            bool zh = PLFN.IsChineseUi();
+            string spectr = sd.spectr.ToString();
+            switch (sd.type)
+            {
+                case EStarType.BlackHole:
+                    return zh ? "黑洞" : "Black Hole";
+                case EStarType.NeutronStar:
+                    return zh ? "中子星" : "Neutron Star";
+                case EStarType.WhiteDwarf:
+                    return zh ? "白矮星" : "White Dwarf";
+                case EStarType.GiantStar:
+                    //the star info panel calls a B class giant "blue giant", so use the colour name
+                    //and append the spectral class in brackets
+                    return GiantColorName(sd, zh) + (zh ? "（" + spectr + "型）" : " (" + spectr + "-type)");
+                default:
+                    return zh ? spectr + "型恒星" : spectr + "-type Star";
+            }
+        }
+
+        private static string GiantColorName(StarData sd, bool zh)
+        {
+            switch (sd.spectr)
+            {
+                case ESpectrType.O:
+                case ESpectrType.B:
+                    return zh ? "蓝巨星" : "Blue Giant";
+                case ESpectrType.A:
+                    return zh ? "白巨星" : "White Giant";
+                case ESpectrType.F:
+                    return zh ? "黄白巨星" : "Yellow-White Giant";
+                case ESpectrType.G:
+                    return zh ? "黄巨星" : "Yellow Giant";
+                case ESpectrType.K:
+                    return zh ? "橙巨星" : "Orange Giant";
+                case ESpectrType.M:
+                    return zh ? "红巨星" : "Red Giant";
+                default:
+                    return zh ? "巨星" : "Giant";
+            }
+        }
+
+        /// <summary>
+        /// Some gas giants carry a high deuterium output; the type text marks them so they can be told
+        /// apart from ordinary gas giants.
+        /// </summary>
+        private bool IsDeuteriumRichGasGiant()
+        {
+            if (planetData == null || !UIPlanetFinderWindow.IsGasGiant(planetData))
+            {
+                return false;
+            }
+            int[] items = planetData.gasItems;
+            float[] speeds = planetData.gasSpeeds;
+            if (items == null || speeds == null)
+            {
+                return false;
+            }
+            int count = Mathf.Min(items.Length, speeds.Length);
+            for (int i = 0; i < count; i++)
+            {
+                if (items[i] == DeuteriumItemId && speeds[i] > HighGasSpeedThreshold)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -467,20 +624,59 @@ item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f)
 
             if (labelIcon.sprite == null)
             {
-                //a planet row shows a small thumbnail of the planet; star rows (and builds where the
-                //game texture is unavailable) keep the plain colour dot
-                Sprite thumbnail = PLFN.showPlanetThumbnail.Value ? PlanetThumbnail.Get(planetData) : null;
-                if (thumbnail != null)
+                //a planet row shows the game's round planet icon, a star row the round star icon of its
+                //type tinted with the star colour. A black hole and a neutron star keep the original
+                //colour dot and only get a thin ring around it.
+                Sprite icon = null;
+                bool tint = false;
+                if (PLFN.showPlanetThumbnail.Value)
                 {
-                    labelIcon.color = Color.white;
-                    labelIcon.sprite = thumbnail;
-                    labelIcon.rectTransform.localScale = Vector3.one;
+                    if (planetData != null)
+                    {
+                        icon = PlanetThumbnail.Get(planetData);
+                    }
+                    else if (starData != null)
+                    {
+                        icon = PlanetThumbnail.GetStar(starData);
+                        tint = true;
+                    }
+                }
+
+                bool dotOnly = starData != null
+                    && (starData.type == EStarType.BlackHole || starData.type == EStarType.NeutronStar);
+                if (dotOnly)
+                {
+                    icon = null;
+                }
+                bool ringed = starData != null
+                    && (starData.type == EStarType.BlackHole || starData.type == EStarType.NeutronStar);
+
+                if (icon != null)
+                {
+                    labelIcon.color = tint ? planetColor : Color.white;
+                    labelIcon.sprite = icon;
+                    //every star icon keeps the same outer box; a giant only looks bigger because its
+                    //sprite has a larger bright core, a white dwarf is slightly smaller
+                    float scale = 1f;
+                    if (tint && starData.type == EStarType.WhiteDwarf)
+                    {
+                        scale = 0.8f;
+                    }
+                    else if (tint)
+                    {
+                        scale = 0.85f;
+                    }
+                    labelIcon.rectTransform.localScale = new Vector3(scale, scale, 1f);
                 }
                 else
                 {
                     labelIcon.color = planetColor;
                     labelIcon.sprite = circleSprite;
                     labelIcon.rectTransform.localScale = new Vector3(0.3f, 0.3f, 1f);
+                }
+                if (iconHalo != null)
+                {
+                    iconHalo.gameObject.SetActive(ringed);
                 }
             }
         }

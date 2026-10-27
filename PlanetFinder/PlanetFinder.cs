@@ -43,6 +43,7 @@ namespace PlanetFinderMod
         public static ConfigEntry<bool> countReusedVeinGroups;
         public static ConfigEntry<bool> highlightHighDeuteriumRate;
         public static ConfigEntry<bool> showPlanetThumbnail;
+        public static ConfigEntry<bool> showRowTooltip;
         public static ConfigEntry<string> gasGiantPrefix;
         public static ConfigEntry<string> tidalLockedPrefix;
         public static ConfigEntry<float> mainWindowSize;
@@ -84,6 +85,8 @@ namespace PlanetFinderMod
                 "highlight a high-yield deuterium extraction speed above 0.100/s in light green / 重氢高产：开采速率超过 0.100/s 时以淡绿色显示");
             showPlanetThumbnail = Config.Bind("UI", "showPlanetThumbnail", true,
                 "show a planet thumbnail instead of the colour dot in front of the planet name / 在星球名前显示行星缩略图（关闭则恢复类型色点）");
+            showRowTooltip = Config.Bind("UI", "showRowTooltip", true,
+                "show 显示每行星球类型: a tooltip with the star/planet type when hovering a row icon or name / 显示每行星球类型：悬停行内图标或名称时显示恒星/行星类型");
             gasGiantPrefix = Config.Bind("UI", "gasGiantPrefix", "[GAS]",
                 "gas giant prefix default is [GAS]");
             tidalLockedPrefix = Config.Bind("UI", "tidalLockedPrefix", "[TL]",
@@ -100,6 +103,15 @@ namespace PlanetFinderMod
             harmony.PatchAll(typeof(Patch));
             harmony.PatchAll(typeof(MyWindowCtl.Patch));
             harmony.PatchAll(typeof(StarDistance.Patch));
+        }
+
+        /// <summary>
+        /// True when the game runs in Chinese. Localization.CurrentLanguageLCID is not reliable in
+        /// every build (it reported English on a Chinese game), the Language struct carries the lcId.
+        /// </summary>
+        public static bool IsChineseUi()
+        {
+            return Localization.CurrentLanguage.lcId == Localization.LCID_ZHCN;
         }
 
         public static void Log(string str)

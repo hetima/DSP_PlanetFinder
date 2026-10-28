@@ -1,4 +1,4 @@
-﻿using BepInEx;
+using BepInEx;
 using BepInEx.Logging;
 using BepInEx.Configuration;
 using UnityEngine;
@@ -17,6 +17,8 @@ namespace PlanetFinderMod
         public RectTransform rectTrans;
         public Text labelText;
         public ConfigEntry<bool> config;
+        public bool interactable = true;
+        private Color labelNormalColor = Color.white;
 
         // MyCheckBox を作って RectTransform を返す
         public static RectTransform CreateCheckBox(ConfigEntry<bool> config, string label = "", int fontSize = 17)
@@ -51,6 +53,7 @@ namespace PlanetFinderMod
                 GameObject.DestroyImmediate(child.GetComponent<Localizer>());
                 cb.labelText = child.GetComponent<Text>();
                 cb.labelText.fontSize = fontSize;
+                cb.labelNormalColor = cb.labelText.color;
                 cb.SetLabelText(label);
             }
 
@@ -73,6 +76,28 @@ namespace PlanetFinderMod
             }
         }
 
+        /// <summary>
+        /// Enables or disables the check box. A disabled box cannot be clicked and is drawn dimmed.
+        /// </summary>
+        public void SetInteractable(bool on)
+        {
+            interactable = on;
+            if (uiButton != null && uiButton.button != null)
+            {
+                uiButton.button.enabled = on;
+            }
+            if (checkImage != null)
+            {
+                checkImage.color = on ? Color.white : new Color(1f, 1f, 1f, 0.3f);
+            }
+            if (labelText != null)
+            {
+                labelText.color = on
+                    ? labelNormalColor
+                    : new Color(labelNormalColor.r, labelNormalColor.g, labelNormalColor.b, labelNormalColor.a * 0.35f);
+            }
+        }
+
         public void SettingChanged()
         {
             if (config.Value != checkImage.enabled)
@@ -83,6 +108,10 @@ namespace PlanetFinderMod
 
         public void OnClick(int obj)
         {
+            if (!interactable)
+            {
+                return;
+            }
             config.Value = !config.Value;
         }
 

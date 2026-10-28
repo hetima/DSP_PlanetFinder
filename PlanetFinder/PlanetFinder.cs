@@ -13,7 +13,7 @@ using static PlanetFinderMod.UIPlanetFinderWindow;
 
 namespace PlanetFinderMod
 {
-    [BepInPlugin(__GUID__, __NAME__, "1.3.0")]
+    [BepInPlugin(__GUID__, __NAME__, "1.3.1")]
     public class PLFN : BaseUnityPlugin
     {
         public const string __NAME__ = "PlanetFinder";
@@ -38,6 +38,12 @@ namespace PlanetFinderMod
         public static ConfigEntry<bool> showPrefix;
         public static ConfigEntry<bool> showLocateButtonInList;
         public static ConfigEntry<bool> distanceTextSmallFont;
+        public static ConfigEntry<bool> showVeinCellCount;
+        public static ConfigEntry<bool> showVeinGroupCount;
+        public static ConfigEntry<bool> countReusedVeinGroups;
+        public static ConfigEntry<bool> highlightHighDeuteriumRate;
+        public static ConfigEntry<bool> showPlanetThumbnail;
+        public static ConfigEntry<bool> showRowTooltip;
         public static ConfigEntry<string> gasGiantPrefix;
         public static ConfigEntry<string> tidalLockedPrefix;
         public static ConfigEntry<float> mainWindowSize;
@@ -54,37 +60,58 @@ namespace PlanetFinderMod
             Harmony harmony = new Harmony(__GUID__);
 
             mainWindowHotkey = Config.Bind("Keyboard Shortcuts", "mainWindowHotkey", KeyboardShortcut.Deserialize("F + LeftControl"),
-                "Hotkey to open/close window");
+                "hotkey to open/close window / 打开/关闭窗口的快捷键");
             showButtonInMainPanel = Config.Bind("UI", "showButtonInMainPanel", true,
-                "show open/close button in main panel");
+                "show open/close button in main panel / 在主面板显示打开按钮");
             showButtonInStarmap = Config.Bind("UI", "showButtonInStarmap", true,
-                "show open/close button in starmap");
+                "show open/close button in starmap / 在星图显示打开按钮");
             showFavButtonInStarmap = Config.Bind("UI", "showFavButtonInStarmap", false,
-                "show toggle favorited button in starmap planet detail panel");
+                "show toggle favorited button in starmap planet detail panel / 在星图行星详情面板显示收藏按钮");
             showPowerState = Config.Bind("UI", "showPowerState", true,
-                "show power consumption");
+                "show power consumption / 显示用电情况");
             showPrefix = Config.Bind("UI", "showPrefix", true,
-                "show prefix [GAS] and [TL]");
+                "show prefix [GAS] and [TL] / 显示 [GAS] 与 [TL] 标记");
             showLocateButtonInList = Config.Bind("UI", "showLocateButtonInList", true,
-                "show the locate planet button on each list row");
+                "show the locate planet button on each list row / 在每行显示定位按钮");
             distanceTextSmallFont = Config.Bind("UI", "distanceTextSmallFont", false,
-                "use the same font size for the distance text as for the vein amount");
+                "use the same font size for the distance text as for the vein amount / 距离文本使用与矿脉储量相同的字号");
+            showVeinCellCount = Config.Bind("UI", "showVeinCellCount", true,
+                "show the mined/total vein cell count as (mined/total) / 显示矿片（矿脉格）开采数量，格式 (已开采/总数)");
+            showVeinGroupCount = Config.Bind("UI", "showVeinGroupCount", true,
+                "show the mined/total vein group count as [mined/total] / 显示矿点（矿脉区块）开采数量，格式 [已开采/总数]");
+            countReusedVeinGroups = Config.Bind("UI", "countReusedVeinGroups", false,
+                "count a vein group once per mining machine, so a reused group makes the mined count exceed the total / 按矿机重复计算矿点，被多台矿机覆盖的矿点会重复计数（已开采数可能大于总数）");
+            highlightHighDeuteriumRate = Config.Bind("UI", "highlightHighDeuteriumRate", true,
+                "highlight a high-yield deuterium extraction speed above 0.100/s in light green / 重氢高产：开采速率超过 0.100/s 时以淡绿色显示");
+            showPlanetThumbnail = Config.Bind("UI", "showPlanetThumbnail", true,
+                "show a planet thumbnail instead of the colour dot in front of the planet name / 在星球名前显示行星缩略图（关闭则恢复类型色点）");
+            showRowTooltip = Config.Bind("UI", "showRowTooltip", true,
+                "show 显示每行星球类型: a tooltip with the star/planet type when hovering a row icon or name / 显示每行星球类型：悬停行内图标或名称时显示恒星/行星类型");
             gasGiantPrefix = Config.Bind("UI", "gasGiantPrefix", "[GAS]",
                 "gas giant prefix default is [GAS]");
             tidalLockedPrefix = Config.Bind("UI", "tidalLockedPrefix", "[TL]",
-                "tidal locked prefix default is [TL]");
+                "tidal locked prefix default is [TL] / 潮汐锁定标记，默认为 [TL]");
             mainWindowSize = Config.Bind("UI", "mainWindowSize", 8f,
-                "Main window row size (4-40)");
+                "main window row size (4-40) / 主窗口显示行数（4-40）");
 
             integrationWithDSPStarMapMemo = Config.Bind("Integration", "integrationWithDSPStarMapMemo", false,
-                "Display icons set by DSPStarMapMemo");
+                "display icons set by DSPStarMapMemo / 显示 DSPStarMapMemo 设置的图标");
             integrationWithLSTM = Config.Bind("Integration", "integrationWithLSTM", false,
-                "open LSTM from context menu");
+                "open LSTM from context menu / 从右键菜单打开 LSTM");
             integrationWithCruiseAssist = Config.Bind("Integration", "integrationWithCruiseAssist", false,
-                "set CruiseAssist from context menu");
+                "set CruiseAssist from context menu / 从右键菜单设置 CruiseAssist");
             harmony.PatchAll(typeof(Patch));
             harmony.PatchAll(typeof(MyWindowCtl.Patch));
             harmony.PatchAll(typeof(StarDistance.Patch));
+        }
+
+        /// <summary>
+        /// True when the game runs in Chinese. Localization.CurrentLanguageLCID is not reliable in
+        /// every build (it reported English on a Chinese game), the Language struct carries the lcId.
+        /// </summary>
+        public static bool IsChineseUi()
+        {
+            return Localization.CurrentLanguage.lcId == Localization.LCID_ZHCN;
         }
 
         public static void Log(string str)

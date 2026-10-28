@@ -12,6 +12,12 @@ namespace PlanetFinderMod
         public static Sprite circleSprite;
         public static Color valueTextNormalColor;
         public static Color valueTextMiningColor;
+        public static Color gasRateHighlightColor;
+        //deuterium item id (1120 hydrogen, 1121 deuterium, 1011 fire ice)
+        private const int DeuteriumItemId = 1121;
+        private const float HighGasSpeedThreshold = 0.1f;
+        //orbital collector prototype id (0x839); the game's ACH_OrbitalCollectorCount uses the same
+        private const short OrbitalCollectorProtoId = 2105;
 
         public UIPlanetFinderWindow window;
         public bool firstRefleshed;
@@ -61,13 +67,10 @@ namespace PlanetFinderMod
         public Text prefixLabel;
 
         [SerializeField]
-        public Text rateText;
-
-        [SerializeField]
-        public Text rateUnitText;
-
-        [SerializeField]
         public Text valueText;
+
+        [SerializeField]
+        public Text gasRateText;
 
         [SerializeField]
         public Text valueSketchText;
@@ -77,6 +80,10 @@ namespace PlanetFinderMod
 
         [SerializeField]
         public Image labelIcon;
+
+        [SerializeField]
+        public Image iconHalo;
+
 
         [SerializeField]
         public Sprite iconHide;
@@ -155,7 +162,7 @@ namespace PlanetFinderMod
             item.nameText.text = "";
             item.nameText.iconMapping = planetDetail.nameInput.textComponent.iconMapping;
             item.nameText.fontSize = 16;
-            item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f);
+item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f);
 
             //Layout of the numbers on the right side of a row, in pixels from the left edge of the row.
             //The row text font is DIN, about 7px per character at 14pt (measured in the running game).
@@ -188,7 +195,7 @@ namespace PlanetFinderMod
             //Text boxes start at 2px and the distance/prefix boxes at 0px.
             const float numberTop = 2f;
             const float distanceTop = 0f;
-            const float iconTop = 12f;
+            const float iconTop = 12f;        //类型色点中心（轴心 0.5,0.5）
 
             //valueText
             item.valueText = src.valueText;
@@ -202,6 +209,26 @@ namespace PlanetFinderMod
             item.valueText.verticalOverflow = VerticalWrapMode.Overflow;
             valueTextNormalColor = item.valueText.color;
             valueTextMiningColor = new Color(0.1f, 0.7f, 0.8f, valueTextNormalColor.a);
+            //deuterium with a high extraction speed, a deep green that reads well on the dark row
+            gasRateHighlightColor = new Color(0.30f, 0.82f, 0.42f, valueTextNormalColor.a);
+
+            //gasRateText: for a gas resource the extraction speed is shown in the (A/B) slot.
+            //The game's texts carry a shadow/outline that looks like a glow on bright colours, so it is
+            //removed from this single field only.
+            item.gasRateText = GameObject.Instantiate<Text>(item.valueText, item.valueText.transform.parent);
+            item.gasRateText.gameObject.name = "gasRateText";
+            item.gasRateText.alignment = TextAnchor.MiddleRight;
+            item.gasRateText.fontSize = 14;
+            rect = Util.SetFixedSizeAtTopLeft(item.gasRateText, veinCountRight - veinCountWidth, numberTop, veinCountWidth, 24f);
+            item.gasRateText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            item.gasRateText.verticalOverflow = VerticalWrapMode.Overflow;
+            foreach (Shadow glow in item.gasRateText.GetComponents<Shadow>())
+            {
+                //disable instead of Destroy: Destroy is deferred to the end of the frame, so a row
+                //cloned in the same frame would otherwise keep the glow
+                glow.enabled = false;
+            }
+            item.gasRateText.text = "";
 
             //groupText: number of vein groups already being mined / total vein groups, shown as [A/B]
             item.groupText = GameObject.Instantiate<Text>(item.valueText, item.valueText.transform.parent);
@@ -222,25 +249,6 @@ namespace PlanetFinderMod
             rect = Util.SetFixedSizeAtTopLeft(item.valueSketchText, veinCountRight - veinCountWidth, numberTop, veinCountWidth, 24f);
             item.valueSketchText.horizontalOverflow = HorizontalWrapMode.Overflow;
             item.valueSketchText.verticalOverflow = VerticalWrapMode.Overflow;
-
-            //rateText / rateUnitText: for resources extracted from a gas giant or ice giant the amount
-            //field shows the extraction speed. The number is right aligned and the unit starts exactly
-            //at the number's right edge, so the last digit always touches the unit.
-            item.rateText = GameObject.Instantiate<Text>(item.valueText, item.valueText.transform.parent);
-            item.rateText.gameObject.name = "rateText";
-            item.rateText.alignment = TextAnchor.MiddleRight;
-            item.rateText.fontSize = 14;
-            rect = Util.SetFixedSizeAtTopLeft(item.rateText, amountRight - 15f * charWidth, numberTop, 15f * charWidth, 24f);
-            item.rateText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            item.rateText.verticalOverflow = VerticalWrapMode.Overflow;
-
-            item.rateUnitText = GameObject.Instantiate<Text>(item.valueText, item.valueText.transform.parent);
-            item.rateUnitText.gameObject.name = "rateUnitText";
-            item.rateUnitText.alignment = TextAnchor.MiddleLeft;
-            item.rateUnitText.fontSize = 14;
-            rect = Util.SetFixedSizeAtTopLeft(item.rateUnitText, amountRight, numberTop, 2f * charWidth, 24f);
-            item.rateUnitText.horizontalOverflow = HorizontalWrapMode.Overflow;
-            item.rateUnitText.verticalOverflow = VerticalWrapMode.Overflow;
 
             //the row does not show the selected resource icon, only the planet type dot is kept
             GameObject.Destroy(src.iconImage);
@@ -297,11 +305,38 @@ namespace PlanetFinderMod
             item.labelIcon.sprite = circleSprite;
             item.labelIcon.enabled = true;
 
+            //iconHalo: a thin ring around the colour dot of a black hole / neutron star. It is a child of
+            //the dot, centred by the anchors instead of being positioned with hand-computed offsets, so
+            //it stays concentric whatever the dot's pivot, scale or position is.
+            item.iconHalo = Util.CreateGameObject<Image>("iconHalo", 48f, 48f);
+            item.iconHalo.transform.SetParent(item.labelIcon.transform, false);
+            item.iconHalo.raycastTarget = false;
+            item.iconHalo.material = null;
+            item.iconHalo.sprite = PlanetThumbnail.OutlineSprite;
+            RectTransform haloRect = item.iconHalo.rectTransform;
+            haloRect.anchorMin = new Vector2(0.5f, 0.5f);
+            haloRect.anchorMax = new Vector2(0.5f, 0.5f);
+            haloRect.pivot = new Vector2(0.5f, 0.5f);
+            haloRect.anchoredPosition = Vector2.zero;
+            haloRect.sizeDelta = new Vector2(48f, 48f);
+            haloRect.localScale = Vector3.one;
+            item.iconHalo.color = new Color(0.70f, 0.82f, 1f, 0.5f);
+            item.iconHalo.gameObject.SetActive(false);
+
 
             item.iconHide = src.iconHide;
             item.iconButton = src.iconButton;
-            //GameObject.Destroy(src.valueText.gameObject);
-            GameObject.Destroy(src);
+
+            //row tooltip trigger: an invisible raycast area over the icon and the name
+            Image tipHit = Util.CreateGameObject<Image>("row-tip-hit", 226f, 24f);
+            tipHit.transform.SetParent(baseTrans, false);
+            tipHit.material = null;
+            tipHit.color = new Color(0f, 0f, 0f, 0f);
+            tipHit.raycastTarget = true;
+            Util.NormalizeRectWithTopLeft(tipHit, 14f, 0f);
+            RowHoverForward forward = tipHit.gameObject.AddComponent<RowHoverForward>();
+            forward.item = item;
+
             Util.NormalizeRectWithTopLeft(item, 0f, 0f);
             return item;
         }
@@ -318,13 +353,139 @@ namespace PlanetFinderMod
         }
 
         //rows are recycled, so visibility of the row buttons has to follow the current setting every time
-        private void ShowRowButtons(bool show)
+        public void ShowRowButtons(bool show)
         {
             viewBtn.gameObject.SetActive(show);
             if (locateBtn != null)
             {
                 locateBtn.gameObject.SetActive(show && PLFN.showLocateButtonInList.Value);
             }
+        }
+
+        /// <summary>
+        /// Type text shown in the row tooltip: the planet theme name (e.g. ocean planet) or the star
+        /// type in the wording of the game's info panel (e.g. blue giant (B-type)).
+        /// </summary>
+        public string ObjectTypeText()
+        {
+            if (planetData != null)
+            {
+                ThemeProto theme = LDB.themes.Select(planetData.theme);
+                string name = "";
+                if (theme != null)
+                {
+                    //ThemeProto.displayName can stay untranslated; DisplayName is the localization key,
+                    //so translate it explicitly and only fall back to the property when that fails
+                    name = Localization.Translate(theme.DisplayName);
+                    if (string.IsNullOrEmpty(name) || name == theme.DisplayName && !PLFN.IsChineseUi())
+                    {
+                        name = theme.displayName;
+                    }
+                }
+                if (IsDeuteriumRichGasGiant())
+                {
+                    name += PLFN.IsChineseUi() ? "（多重氢）" : " (Deuterium-rich)";
+                }
+                return name;
+            }
+            if (starData != null)
+            {
+                return StarTypeText(starData);
+            }
+            return "";
+        }
+
+        private static bool loggedThemeName;
+
+        private static bool IsChineseUi()
+        {
+            return Localization.CurrentLanguageLCID == Localization.LCID_ZHCN;
+        }
+
+        private static bool ContainsCjk(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+            for (int i = 0; i < text.Length; i++)
+            {
+                if (text[i] >= '\u4e00' && text[i] <= '\u9fff')
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static string StarTypeText(StarData sd)
+        {
+            bool zh = PLFN.IsChineseUi();
+            string spectr = sd.spectr.ToString();
+            switch (sd.type)
+            {
+                case EStarType.BlackHole:
+                    return zh ? "黑洞" : "Black Hole";
+                case EStarType.NeutronStar:
+                    return zh ? "中子星" : "Neutron Star";
+                case EStarType.WhiteDwarf:
+                    return zh ? "白矮星" : "White Dwarf";
+                case EStarType.GiantStar:
+                    //the star info panel calls a B class giant "blue giant", so use the colour name
+                    //and append the spectral class in brackets
+                    return GiantColorName(sd, zh) + (zh ? "（" + spectr + "型）" : " (" + spectr + "-type)");
+                default:
+                    return zh ? spectr + "型恒星" : spectr + "-type Star";
+            }
+        }
+
+        private static string GiantColorName(StarData sd, bool zh)
+        {
+            switch (sd.spectr)
+            {
+                case ESpectrType.O:
+                case ESpectrType.B:
+                    return zh ? "蓝巨星" : "Blue Giant";
+                case ESpectrType.A:
+                    return zh ? "白巨星" : "White Giant";
+                case ESpectrType.F:
+                    return zh ? "黄白巨星" : "Yellow-White Giant";
+                case ESpectrType.G:
+                    return zh ? "黄巨星" : "Yellow Giant";
+                case ESpectrType.K:
+                    return zh ? "橙巨星" : "Orange Giant";
+                case ESpectrType.M:
+                    return zh ? "红巨星" : "Red Giant";
+                default:
+                    return zh ? "巨星" : "Giant";
+            }
+        }
+
+        /// <summary>
+        /// Some gas giants carry a high deuterium output; the type text marks them so they can be told
+        /// apart from ordinary gas giants.
+        /// </summary>
+        private bool IsDeuteriumRichGasGiant()
+        {
+            if (planetData == null || !UIPlanetFinderWindow.IsGasGiant(planetData))
+            {
+                return false;
+            }
+            int[] items = planetData.gasItems;
+            float[] speeds = planetData.gasSpeeds;
+            if (items == null || speeds == null)
+            {
+                return false;
+            }
+            int count = Mathf.Min(items.Length, speeds.Length);
+            for (int i = 0; i < count; i++)
+            {
+                if (items[i] == DeuteriumItemId && speeds[i] > HighGasSpeedThreshold)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>
@@ -463,9 +624,60 @@ namespace PlanetFinderMod
 
             if (labelIcon.sprite == null)
             {
-                labelIcon.color = planetColor;
-                labelIcon.sprite = circleSprite;
-                labelIcon.rectTransform.localScale = new Vector3(0.3f, 0.3f, 1f);
+                //a planet row shows the game's round planet icon, a star row the round star icon of its
+                //type tinted with the star colour. A black hole and a neutron star keep the original
+                //colour dot and only get a thin ring around it.
+                Sprite icon = null;
+                bool tint = false;
+                if (PLFN.showPlanetThumbnail.Value)
+                {
+                    if (planetData != null)
+                    {
+                        icon = PlanetThumbnail.Get(planetData);
+                    }
+                    else if (starData != null)
+                    {
+                        icon = PlanetThumbnail.GetStar(starData);
+                        tint = true;
+                    }
+                }
+
+                bool dotOnly = starData != null
+                    && (starData.type == EStarType.BlackHole || starData.type == EStarType.NeutronStar);
+                if (dotOnly)
+                {
+                    icon = null;
+                }
+                bool ringed = starData != null
+                    && (starData.type == EStarType.BlackHole || starData.type == EStarType.NeutronStar);
+
+                if (icon != null)
+                {
+                    labelIcon.color = tint ? planetColor : Color.white;
+                    labelIcon.sprite = icon;
+                    //every star icon keeps the same outer box; a giant only looks bigger because its
+                    //sprite has a larger bright core, a white dwarf is slightly smaller
+                    float scale = 1f;
+                    if (tint && starData.type == EStarType.WhiteDwarf)
+                    {
+                        scale = 0.8f;
+                    }
+                    else if (tint)
+                    {
+                        scale = 0.85f;
+                    }
+                    labelIcon.rectTransform.localScale = new Vector3(scale, scale, 1f);
+                }
+                else
+                {
+                    labelIcon.color = planetColor;
+                    labelIcon.sprite = circleSprite;
+                    labelIcon.rectTransform.localScale = new Vector3(0.3f, 0.3f, 1f);
+                }
+                if (iconHalo != null)
+                {
+                    iconHalo.gameObject.SetActive(ringed);
+                }
             }
         }
 
@@ -611,23 +823,21 @@ namespace PlanetFinderMod
                 //star row: a star system holds the sum of its planets
                 foreach (PlanetListData planet in ld.planetList)
                 {
-                    if (planet?.planetData != null)
-                    {
-                        result.Add(planet.VeinGroups());
-                    }
+                    //a null placeholder keeps the order aligned with CollectPlanets()
+                    result.Add(planet?.planetData != null ? planet.VeinGroups() : null);
                 }
             }
             return result;
         }
 
         /// <summary>
-        /// Vein counts of the target resource as "mined / total", summed over the row.
-        /// Total is the same number the previous version showed in parentheses (sum of VeinGroup.count, which the
-        /// mod scans for the whole galaxy). For a star row it is the sum over all of its planets.
-        /// Mined means the vein has a mining machine attached (VeinData.minerCount). That can only be read while
-        /// the planet factory is loaded, so planets whose data was released count as not mined.
+        /// Vein cells of the target resource as "mined / total", summed over the row.
+        /// Total is the sum of VeinGroup.count. A cell counts as mined when at least one mining machine
+        /// is attached to it, so a cell used by several machines is still counted once.
+        /// That can only be read while the planet factory is loaded, so planets whose data was released
+        /// count as not mined.
         /// </summary>
-        public void GetVeinUnitCountForPlanet(PlanetListData ld, out int mined, out int total)
+        public void GetVeinCellCountForPlanet(PlanetListData ld, out int mined, out int total)
         {
             mined = 0;
             total = 0;
@@ -635,7 +845,8 @@ namespace PlanetFinderMod
             {
                 return;
             }
-            foreach (VeinGroup[] veinGroups in CollectVeinGroups(ld))
+            List<VeinGroup[]> groupArrays = CollectVeinGroups(ld);
+            foreach (VeinGroup[] veinGroups in groupArrays)
             {
                 if (veinGroups == null)
                 {
@@ -649,11 +860,51 @@ namespace PlanetFinderMod
                     }
                 }
             }
+            if (total <= 0)
+            {
+                return;
+            }
+            bool countReused = PLFN.countReusedVeinGroups.Value;
+            //same order as CollectVeinGroups, so the matching planet is found by index
+            List<PlanetData> planets = CollectPlanets(ld);
+            for (int a = 0; a < groupArrays.Count; a++)
+            {
+                if (groupArrays[a] == null || a >= planets.Count)
+                {
+                    continue;
+                }
+                PlanetFactory factory = planets[a]?.factory;
+                VeinData[] veinPool = factory?.veinPool;
+                if (factory == null || veinPool == null)
+                {
+                    continue;
+                }
+                int cursor = factory.veinCursor;
+                if (cursor > veinPool.Length)
+                {
+                    cursor = veinPool.Length;
+                }
+                for (int i = 1; i < cursor; i++)
+                {
+                    VeinData vein = veinPool[i];
+                    if (vein.id == 0 || vein.minerCount <= 0)
+                    {
+                        continue;
+                    }
+                    if ((int)vein.type == itemId)
+                    {
+                        //a cell covered by several machines counts once, or once per machine
+                        mined += countReused ? (vein.minerCount > 4 ? 4 : vein.minerCount) : 1;
+                    }
+                }
+            }
         }
 
         /// <summary>
         /// Vein group count of the target resource as "mined / total", summed over the row.
-        /// A group counts as mined when any vein of the group has a mining machine attached.
+        /// By default a group counts as mined when any of its veins has a mining machine attached, so a
+        /// reused group is counted once. With PLFN.countReusedVeinGroups the same group is counted once
+        /// per mining machine covering it, so the mined count can exceed the total.
         /// </summary>
         public void GetVeinGroupCountForPlanet(PlanetListData ld, out int mined, out int total)
         {
@@ -682,6 +933,7 @@ namespace PlanetFinderMod
             {
                 return;
             }
+            bool countReused = PLFN.countReusedVeinGroups.Value;
             //same order as CollectVeinGroups, so the matching planet is found by index
             List<PlanetData> planets = CollectPlanets(ld);
             for (int a = 0; a < groupArrays.Count; a++)
@@ -699,6 +951,7 @@ namespace PlanetFinderMod
                 }
                 int groupCount = veinGroups.Length;
                 bool[] minedGroup = new bool[groupCount];
+                List<HashSet<int>> groupMiners = countReused ? NewMinerSets(groupCount) : null;
                 int cursor = factory.veinCursor;
                 if (cursor > veinPool.Length)
                 {
@@ -715,15 +968,60 @@ namespace PlanetFinderMod
                     if (groupIndex > 0 && groupIndex < groupCount)
                     {
                         minedGroup[groupIndex] = true;
+                        if (groupMiners != null)
+                        {
+                            AddMiners(groupMiners[groupIndex], vein);
+                        }
                     }
                 }
                 for (int i = 1; i < veinGroups.Length; i++)
                 {
-                    if ((int)veinGroups[i].type == itemId && minedGroup[i])
+                    if ((int)veinGroups[i].type != itemId)
+                    {
+                        continue;
+                    }
+                    if (groupMiners != null)
+                    {
+                        mined += groupMiners[i].Count;
+                    }
+                    else if (minedGroup[i])
                     {
                         mined++;
                     }
                 }
+            }
+        }
+
+        private static List<HashSet<int>> NewMinerSets(int groupCount)
+        {
+            List<HashSet<int>> result = new List<HashSet<int>>(groupCount);
+            for (int i = 0; i < groupCount; i++)
+            {
+                result.Add(new HashSet<int>());
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Records every mining machine covering this vein, so that one machine covering several veins
+        /// of the same group is still counted once for that group.
+        /// </summary>
+        private static void AddMiners(HashSet<int> miners, VeinData vein)
+        {
+            int count = vein.minerCount;
+            if (count > 4)
+            {
+                count = 4;
+            }
+            for (int m = 0; m < count; m++)
+            {
+                int minerId = m == 0 ? vein.minerId0 : m == 1 ? vein.minerId1 : m == 2 ? vein.minerId2 : vein.minerId3;
+                if (minerId <= 0)
+                {
+                    //the id is not known yet; a synthetic one per vein still counts the coverage
+                    minerId = -vein.id * 8 - m;
+                }
+                miners.Add(minerId);
             }
         }
 
@@ -759,6 +1057,49 @@ namespace PlanetFinderMod
         /// Gas giant resources have no vein reserves, which is why the amount column is otherwise empty.
         /// A star row sums the speed of all of its planets.
         /// </summary>
+        /// <summary>
+        /// Number of orbital collectors already built on the planet (0 for a star row sums its planets).
+        /// Orbital collectors are stations whose entity uses the orbital collector prototype (2105), which
+        /// is how the game's own ACH_OrbitalCollectorCount counts them.
+        /// </summary>
+        public int OrbitalCollectorCount(PlanetListData ld)
+        {
+            int count = 0;
+            foreach (PlanetData pd in CollectPlanets(ld))
+            {
+                PlanetFactory factory = pd?.factory;
+                PlanetTransport transport = factory?.transport;
+                StationComponent[] stationPool = transport?.stationPool;
+                if (factory == null || transport == null || stationPool == null)
+                {
+                    continue;
+                }
+                int cursor = transport.stationCursor;
+                if (cursor > stationPool.Length)
+                {
+                    cursor = stationPool.Length;
+                }
+                for (int i = 1; i < cursor; i++)
+                {
+                    StationComponent station = stationPool[i];
+                    if (station == null || station.id != i)
+                    {
+                        continue;
+                    }
+                    int entityId = station.entityId;
+                    if (entityId > 0 && entityId < factory.entityPool.Length)
+                    {
+                        EntityData entity = factory.entityPool[entityId];
+                        if (entity.id != 0 && entity.protoId == OrbitalCollectorProtoId)
+                        {
+                            count++;
+                        }
+                    }
+                }
+            }
+            return count;
+        }
+
         public float TargetGasExtractSpeed()
         {
             float speed = 0f;
@@ -790,11 +1131,6 @@ namespace PlanetFinderMod
             return 0f;
         }
 
-        private void ClearRateText()
-        {
-            rateText.text = "";
-        }
-
         public void Update()
         {
             if (planetData != null || starData != null)
@@ -813,103 +1149,121 @@ namespace PlanetFinderMod
             {
                 return;
             }
-            //else if (onlyNewlyEmerged)
-            //{
-            //    return true;
-            //}
-            //if (!shown)
-            //{
-            //    return true;
-            //}
             int OldItemId = _itemId;
             valueText.color = valueTextNormalColor;
+            valueSketchText.color = valueTextNormalColor;
+            gasRateText.color = valueTextNormalColor;
+            groupText.color = valueTextNormalColor;
+            gasRateText.text = "";
             itemId = window.targetItemId;
             if (itemId != 0)
             {
-                if (!GameMain.data.gameDesc.isInfiniteResource)
+                //a resource extracted from a gas giant or ice giant (hydrogen, deuterium, fire ice, ...)
+                //has no vein reserve on that planet, so its extraction speed is shown in the group field.
+                //This takes priority over a vein reserve: a planet can have both a solid fire ice vein
+                //and fire ice in its atmosphere.
+                float gasSpeed = TargetGasExtractSpeed();
+                long amount = 0L;
+                if (!GameMain.data.gameDesc.isInfiniteResource && gasSpeed <= 0f)
                 {
-                    //a resource extracted from a gas giant or ice giant (hydrogen, deuterium, fire ice, ...)
-                    //has no vein reserve on that planet, so show its extraction speed instead, the same way
-                    //crude oil shows a rate. This takes priority over a vein reserve: a planet can have both
-                    //a solid fire ice vein and fire ice in its atmosphere.
-                    float gasSpeed = TargetGasExtractSpeed();
-                    long amount = gasSpeed > 0f ? 0L : TargetItemAmount();
-                    if (gasSpeed > 0f)
+                    amount = TargetItemAmount();
+                }
+                if (gasSpeed > 0f)
+                {
+                    valueText.text = "";
+                }
+                else if (amount > 0)
+                {
+                    if (itemId == 7)
                     {
-                        //4 decimals, and the unit is a separate right aligned field so that the last
-                        //digit of the number always touches the unit
-                        StringBuilderUtility.WritePositiveFloat(sb, 0, 16, gasSpeed, 4, ' ');
-                        rateText.text = sb.ToString().Trim();
-                        valueText.text = "";
-                    }
-                    else if (amount > 0)
-                    {
-                        if (itemId == 7)
-                        {
-                            double num3 = (double)amount * (double)VeinData.oilSpeedMultiplier;
-                            StringBuilderUtility.WritePositiveFloat(sb, 0, 8, (float)num3, 2, ' ');
-                        }
-                        else
-                        {
-                            if (amount < 1_000_000_000L)
-                            {
-                                StringBuilderUtility.WriteCommaULong(sb, 0, 16, (ulong)amount, 1, ' ');
-                            }
-                            else
-                            {
-                                StringBuilderUtility.WriteKMG(sb, 15, amount, false, '\u2009', ' ');
-                            }
-                        }
-                        //StringBuilderUtility pads the value to a fixed field with leading spaces.
-                        //They are invisible because the text is right aligned, but they make the string
-                        //much wider than the number itself and push it over the neighbouring texts.
-                        string newVlue = sb.ToString().TrimStart(' ');
-                        if (firstRefleshed && OldItemId == _itemId)
-                        {
-                            if (newVlue != valueText.text)
-                            {
-                                valueText.text = newVlue;
-                                valueText.color = valueTextMiningColor;
-                            }
-                        }
-                        else
-                        {
-                            valueText.text = newVlue;
-                        }
-                        ClearRateText();
+                        double num3 = (double)amount * (double)VeinData.oilSpeedMultiplier;
+                        StringBuilderUtility.WritePositiveFloat(sb, 0, 8, (float)num3, 2, ' ');
                     }
                     else
                     {
-                        valueText.text = "";
+                        if (amount < 1_000_000_000L)
+                        {
+                            StringBuilderUtility.WriteCommaULong(sb, 0, 16, (ulong)amount, 1, ' ');
+                        }
+                        else
+                        {
+                            StringBuilderUtility.WriteKMG(sb, 15, amount, false, '\u2009', ' ');
+                        }
+                    }
+                    //StringBuilderUtility pads the value to a fixed field with leading spaces.
+                    //They are invisible because the text is right aligned, but they make the string
+                    //much wider than the number itself and push it over the neighbouring texts.
+                    string newVlue = sb.ToString().TrimStart(' ');
+                    if (firstRefleshed && OldItemId == _itemId)
+                    {
+                        if (newVlue != valueText.text)
+                        {
+                            valueText.text = newVlue;
+                            valueText.color = valueTextMiningColor;
+                        }
+                    }
+                    else
+                    {
+                        valueText.text = newVlue;
+                    }
+                }
+                else
+                {
+                    //also clears a value left over by the recycled row (infinite resource mode)
+                    valueText.text = "";
+                }
+
+                //vein cells as "(mined/total)"; cyan when anything is being mined there, grey otherwise
+                GetVeinCellCountForPlanet(listData, out int veinMined, out int veinTotal);
+                if (gasSpeed > 0f)
+                {
+                    //gas resources have no vein cells; the (A/B) slot shows the extraction speed of the
+                    //selected resource instead (4 decimals, like the game's own gas display)
+                    StringBuilderUtility.WritePositiveFloat(sb, 0, 16, gasSpeed, 4, ' ');
+                    gasRateText.text = sb.ToString().Trim() + "/s";
+                    //highlight a high-yield deuterium gas giant
+                    bool highDeuterium = itemId == DeuteriumItemId && gasSpeed > HighGasSpeedThreshold;
+                    gasRateText.color = (PLFN.highlightHighDeuteriumRate.Value && highDeuterium) ? gasRateHighlightColor : valueTextNormalColor;
+                    valueSketchText.text = "";
+                    //the [A/B] slot shows how many orbital collectors are already built there,
+                    //bracketed so that it is not mistaken for a vein group count; nothing is shown
+                    //when there is none, so that empty rows stay clean
+                    int collectorCount = OrbitalCollectorCount(listData);
+                    groupText.text = collectorCount > 0 ? "[" + collectorCount.ToString() + "]" : "";
+                }
+                else
+                {
+                    if (PLFN.showVeinCellCount.Value && veinTotal > 0)
+                    {
+                        valueSketchText.text = "(" + veinMined.ToString() + "/" + veinTotal.ToString() + ")";
+                        valueSketchText.color = veinMined > 0 ? valueTextMiningColor : valueTextNormalColor;
+                    }
+                    else
+                    {
+                        valueSketchText.text = "";
                     }
                 }
 
-                //vein count as "(mined/total)"; cyan when anything is being mined there, default grey otherwise
-                GetVeinUnitCountForPlanet(listData, out int veinMined, out int veinTotal);
-                if (veinTotal > 0)
+                if (gasSpeed <= 0f)
                 {
-                    valueSketchText.text = "(" + veinMined.ToString() + "/" + veinTotal.ToString() + ")";
-                    valueSketchText.color = veinMined > 0 ? valueTextMiningColor : valueTextNormalColor;
-                }
-                else
-                {
-                    valueSketchText.text = "";
+                    //vein groups as "[mined/total]", placed between the amount and the vein cell count
+                    GetVeinGroupCountForPlanet(listData, out int groupMined, out int groupTotal);
+                    if (PLFN.showVeinGroupCount.Value && groupTotal > 0)
+                    {
+                        groupText.text = "[" + groupMined.ToString() + "/" + groupTotal.ToString() + "]";
+                        groupText.color = groupMined > 0 ? valueTextMiningColor : valueTextNormalColor;
+                    }
+                    else
+                    {
+                        groupText.text = "";
+                    }
                 }
 
-                //vein group count as "[mined/total]", placed between the amount and the vein count
-                GetVeinGroupCountForPlanet(listData, out int groupMined, out int groupTotal);
-                if (groupTotal > 0)
-                {
-                    groupText.text = "[" + groupMined.ToString() + "/" + groupTotal.ToString() + "]";
-                    groupText.color = groupMined > 0 ? valueTextMiningColor : valueTextNormalColor;
-                }
-                else
-                {
-                    groupText.text = "";
-                }
             }
             else if (PLFN.showPowerState.Value && planetData?.factory?.powerSystem != null)
             {
+                //the power state keeps the original single line display: the same text with the
+                //percentage and the colour warning as the 1.2.6 build
                 valueText.text = PowerState(out int networkCount);
                 if (networkCount > 1)
                 {
@@ -920,19 +1274,13 @@ namespace PlanetFinderMod
                     valueSketchText.text = "";
                 }
                 groupText.text = "";
-                ClearRateText();
             }
             else
             {
                 valueText.text = "";
                 valueSketchText.text = "";
                 groupText.text = "";
-                ClearRateText();
             }
-
-            //the rate fields are only used for gas giant resources; the unit is a separate field so that
-            //the last digit of the number always ends exactly where the unit begins
-            rateUnitText.text = (rateText.text.Length > 0) ? "/s" : "";
 
             firstRefleshed = true;
         }

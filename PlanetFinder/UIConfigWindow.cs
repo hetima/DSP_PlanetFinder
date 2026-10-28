@@ -31,19 +31,48 @@ namespace PlanetFinderMod
             return true;
         }
 
+        /// <summary>
+        /// Every label that has an English and a Chinese text. The panel is created during game start,
+        /// before Localization finished loading, so the real language is only known when the window is
+        /// opened; the labels are therefore stored and re-applied on every open.
+        /// </summary>
+        private readonly System.Collections.Generic.List<(Text text, string en, string zh)> languageEntries
+            = new System.Collections.Generic.List<(Text text, string en, string zh)>();
+
+        private void ApplyLanguage()
+        {
+            bool useChinese = PLFN.IsChineseUi();
+            foreach (var entry in languageEntries)
+            {
+                if (entry.text != null)
+                {
+                    entry.text.text = useChinese ? entry.zh : entry.en;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Label text in the game language: Chinese for a Chinese game, English otherwise.
+        /// </summary>
+        private static string L(string en, string zh)
+        {
+            return PLFN.IsChineseUi() ? zh : en;
+        }
+
         public void OpenWindow()
         {
+            ApplyLanguage();
             MyWindowCtl.OpenWindow(this);
             if (windowTrans != null)
             {
-                windowTrans.sizeDelta = new Vector2(640f, 376f);
+                windowTrans.sizeDelta = new Vector2(640f, 516f);
             }
         }
 
         public override void _OnCreate()
         {
             windowTrans = MyWindowCtl.GetRectTransform(this);
-            windowTrans.sizeDelta = new Vector2(640f, 376f);
+            windowTrans.sizeDelta = new Vector2(640f, 516f);
 
             CreateUI();
         }
@@ -61,13 +90,13 @@ namespace PlanetFinderMod
             {
                 GameObject tab = new GameObject();
                 RectTransform tabRect = tab.AddComponent<RectTransform>();
-                Util.NormalizeRectWithMargin(tabRect, 54f + 28f, 36f, 0f, 0f, windowTrans);
+                Util.NormalizeRectWithMargin(tabRect, 48f, 36f, 0f, 0f, windowTrans);
                 tab.name = "tab-" + tabIndex_.ToString();
                 //tab button
                 UIDESwarmPanel swarmPanel = UIRoot.instance.uiGame.dysonEditor.controlPanel.hierarchy.swarmPanel;
                 UIButton src = swarmPanel.orbitButtons[0];
                 UIButton btn = GameObject.Instantiate<UIButton>(src);
-                RectTransform btnRext = Util.NormalizeRectWithTopLeft(btn, tabx_, 54f, windowTrans);
+                RectTransform btnRext = Util.NormalizeRectWithTopLeft(btn, tabx_, 44f, windowTrans);
                 btnRext.sizeDelta = new Vector2(100f, 24f);
                 //(btn.transform.Find("frame").transform as RectTransform).sizeDelta = btnRext.sizeDelta;
                 btn.transform.Find("frame").gameObject.SetActive(false);
@@ -109,10 +138,28 @@ namespace PlanetFinderMod
                 (txt_.transform as RectTransform).sizeDelta = new Vector2(txt_.preferredWidth + 40f, 30f);
                 return txt_;
             }
+            RectTransform MakeCheckBox(BepInEx.Configuration.ConfigEntry<bool> config, string en, string zh)
+            {
+                RectTransform result = MyCheckBox.CreateCheckBox(config, en);
+                MyCheckBox box = result != null ? result.GetComponent<MyCheckBox>() : null;
+                if (box != null && box.labelText != null)
+                {
+                    languageEntries.Add((box.labelText, en, zh));
+                }
+                return result;
+            }
+
+            Text MakeLabel(string en, string zh)
+            {
+                Text label = CreateText(en);
+                languageEntries.Add((label, en, zh));
+                return label;
+            }
+
             Text txt;
 
             //General tab
-            tab1 = AddTab("General", out tabBtn1);
+            tab1 = AddTab(L("General", "通用"), out tabBtn1);
 
             tabBtn1.gameObject.SetActive(false);
 
@@ -121,39 +168,71 @@ namespace PlanetFinderMod
             y_ = 0f;
             x_ = 0f;
             rect = MyKeyBinder.CreateKeyBinder(PLFN.mainWindowHotkey, "Main Hotkey");
+            Text keyBinderLabel = rect != null ? rect.GetComponentInChildren<Text>() : null;
+            if (keyBinderLabel != null)
+            {
+                languageEntries.Add((keyBinderLabel, "Main Hotkey", "主快捷键"));
+            }
             AddElement(rect, 90f);
 
-            rect = MyCheckBox.CreateCheckBox(PLFN.showButtonInMainPanel, "Show Button In Main Panel");
+            rect = MakeCheckBox(PLFN.showButtonInMainPanel, "Show Button In Main Panel", "主面板显示按钮");
             AddElement(rect, 26f);
-            rect = MyCheckBox.CreateCheckBox(PLFN.showButtonInStarmap, "Show Button In Starmap");
+            rect = MakeCheckBox(PLFN.showButtonInStarmap, "Show Button In Starmap", "星图显示按钮");
             AddElement(rect, 26f);
 
-            txt = CreateText("Window Size");
+            txt = MakeLabel("Window Size", "窗口行数");
             AddElement(txt.transform as RectTransform, 32f);
             rect = MySlider.CreateSlider(PLFN.mainWindowSize, 4f, 40f, "0", 200f);
             AddElement(rect, 26f);
 
-            rect = MyCheckBox.CreateCheckBox(PLFN.showPowerState, "Show Power State In List");
+            rect = MakeCheckBox(PLFN.showPowerState, "Show Power State In List", "列表显示用电状态");
             AddElement(rect, 26f);
-            rect = MyCheckBox.CreateCheckBox(PLFN.showPrefix, "Show [GAS] [TL] Prefix");
+            rect = MakeCheckBox(PLFN.showPrefix, "Show [GAS] [TL] Prefix", "显示 [GAS] [TL] 前缀");
             AddElement(rect, 26f);
-            rect = MyCheckBox.CreateCheckBox(PLFN.showLocateButtonInList, "Show Locate Button In List");
+            rect = MakeCheckBox(PLFN.showLocateButtonInList, "Show Locate Button In List", "列表显示定位按钮");
+            AddElement(rect, 26f);
+
+            rect = MakeCheckBox(PLFN.showVeinCellCount, "Show Vein Cell Count", "显示矿片数 (A/B)");
+            AddElement(rect, 26f);
+            rect = MakeCheckBox(PLFN.showVeinGroupCount, "Show Vein Group Count", "显示矿点数 [A/B]");
+            AddElement(rect, 26f);
+            RectTransform reusedRect = MakeCheckBox(PLFN.countReusedVeinGroups, "Count Reused Vein Groups", "矿点按矿机重复计数");
+            AddElement(reusedRect, 26f);
+
+            //"Count Reused Vein Groups" only makes sense while the vein group count is shown,
+            //so it is disabled and dimmed while that option is off
+            MyCheckBox reusedBox = reusedRect.GetComponent<MyCheckBox>();
+            void SyncReusedBox()
+            {
+                if (reusedBox != null)
+                {
+                    reusedBox.SetInteractable(PLFN.showVeinGroupCount.Value);
+                }
+            }
+            PLFN.showVeinGroupCount.SettingChanged += (sender, args) => SyncReusedBox();
+            SyncReusedBox();
+
+            rect = MakeCheckBox(PLFN.highlightHighDeuteriumRate, "Highlight High Deuterium Rate", "重氢高产高亮");
+            AddElement(rect, 26f);
+            rect = MakeCheckBox(PLFN.showPlanetThumbnail, "Show Planet Thumbnail", "显示行星图标");
+            AddElement(rect, 26f);
+            rect = MakeCheckBox(PLFN.showRowTooltip, "Show Planet Type Per Row", "显示每行星球类型");
             AddElement(rect, 26f);
 
             x_ = 290f;
             y_ = 0f;
 
-            rect = MyCheckBox.CreateCheckBox(PLFN.showFavButtonInStarmap, "Show Fav Button In Starmap");
+            rect = MakeCheckBox(PLFN.showFavButtonInStarmap, "Show Fav Button In Starmap", "星图显示收藏按钮");
             AddElement(rect, 26f);
-            rect = MyCheckBox.CreateCheckBox(PLFN.distanceTextSmallFont, "Small Font For Distance");
+            rect = MakeCheckBox(PLFN.distanceTextSmallFont, "Small Font For Distance", "距离使用小字号");
             AddElement(rect, 26f);
 
             if (PLFN.aDSPStarMapMemoIntg.canGetSignalIconId)
             {
-                rect = MyCheckBox.CreateCheckBox(PLFN.integrationWithDSPStarMapMemo, "Integration With DSPStarMapMemo");
+                rect = MakeCheckBox(PLFN.integrationWithDSPStarMapMemo, "Integration With DSPStarMapMemo", "联动 DSPStarMapMemo");
                 AddElement(rect, 22f);
                 x_ += 32f;
-                txt = CreateText("Display Icons / Search Memo");
+                txt = MakeLabel("Display Icons / Search Memo", "显示图标 / 搜索便签");
                 txt.fontSize = 14;
                 AddElement(txt.rectTransform, 24f);
                 x_ -= 32f;
@@ -161,20 +240,20 @@ namespace PlanetFinderMod
             }
             if (PLFN.aLSTMIntg.canOpenPlanetId)
             {
-                rect = MyCheckBox.CreateCheckBox(PLFN.integrationWithLSTM, "Integration With LSTM");
+                rect = MakeCheckBox(PLFN.integrationWithLSTM, "Integration With LSTM", "联动 LSTM");
                 AddElement(rect, 22f);
                 x_ += 32f;
-                txt = CreateText("Open LSTM From Context Panel");
+                txt = MakeLabel("Open LSTM From Context Panel", "右键菜单打开 LSTM");
                 txt.fontSize = 14;
                 AddElement(txt.rectTransform, 24f);
                 x_ -= 32f;
             }
             if (PLFN.aCruiseAssistIntg.canSelectPlanet)
             {
-                rect = MyCheckBox.CreateCheckBox(PLFN.integrationWithCruiseAssist, "Integration With CruiseAssist");
+                rect = MakeCheckBox(PLFN.integrationWithCruiseAssist, "Integration With CruiseAssist", "联动 CruiseAssist");
                 AddElement(rect, 22f);
                 x_ += 32f;
-                txt = CreateText("Set CruiseAssist From Context Panel");
+                txt = MakeLabel("Set CruiseAssist From Context Panel", "右键菜单设置 CruiseAssist");
                 txt.fontSize = 14;
                 AddElement(txt.rectTransform, 24f);
                 x_ -= 32f;

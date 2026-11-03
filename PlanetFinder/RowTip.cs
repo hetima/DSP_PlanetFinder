@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace PlanetFinderMod
@@ -14,6 +14,8 @@ namespace PlanetFinderMod
         private static RowTip instance;
         private static bool warnedPrefab;
         private static bool hookedConfig;
+        private static UIPlanetFinderListItem currentItem;
+        private static string currentTitle;
         private UISimpleGeneralTip tip;
 
         public static void Show(UIPlanetFinderListItem item, string titleText)
@@ -29,6 +31,13 @@ namespace PlanetFinderMod
             {
                 return;
             }
+            //pointer-move calls this every frame; rebuilding the native tip each time flickers it
+            if (currentItem == item && currentTitle == titleText && instance.tip != null && instance.tip.gameObject.activeSelf)
+            {
+                return;
+            }
+            currentItem = item;
+            currentTitle = titleText;
 
             UISimpleGeneralTip.TipSettings settings = new UISimpleGeneralTip.TipSettings();
             settings.topLevel = true;
@@ -101,6 +110,8 @@ namespace PlanetFinderMod
 
         public static void Hide()
         {
+            currentItem = null;
+            currentTitle = null;
             if (instance != null && instance.tip != null)
             {
                 instance.tip.gameObject.SetActive(false);

@@ -41,8 +41,8 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
-### v1.3.2
-- The type tooltip and the view / locate buttons no longer hide each other (by TTenYX)
+### v1.3.2 (by TTenYX)
+- The type tooltip and the view / locate buttons no longer hide each other
 
 ### v1.3.1
 - Show mined and total vein counts, gas extraction speed, planet icons and a type tooltip (by TTenYX) [details](https://github.com/hetima/DSP_PlanetFinder/pull/27)

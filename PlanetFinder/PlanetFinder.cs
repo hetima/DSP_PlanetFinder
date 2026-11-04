@@ -1,4 +1,4 @@
-﻿//using System.Text;
+//using System.Text;
 
 using BepInEx;
 using BepInEx.Logging;
@@ -13,7 +13,7 @@ using static PlanetFinderMod.UIPlanetFinderWindow;
 
 namespace PlanetFinderMod
 {
-    [BepInPlugin(__GUID__, __NAME__, "1.3.1")]
+    [BepInPlugin(__GUID__, __NAME__, "1.3.2")]
     public class PLFN : BaseUnityPlugin
     {
         public const string __NAME__ = "PlanetFinder";

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 namespace PlanetFinderMod
 {
-    public class UIPlanetFinderListItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
+    public class UIPlanetFinderListItem : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerMoveHandler, IPointerClickHandler
     {
         public static Sprite circleSprite;
         public static Color valueTextNormalColor;
@@ -326,16 +326,6 @@ item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f)
 
             item.iconHide = src.iconHide;
             item.iconButton = src.iconButton;
-
-            //row tooltip trigger: an invisible raycast area over the icon and the name
-            Image tipHit = Util.CreateGameObject<Image>("row-tip-hit", 226f, 24f);
-            tipHit.transform.SetParent(baseTrans, false);
-            tipHit.material = null;
-            tipHit.color = new Color(0f, 0f, 0f, 0f);
-            tipHit.raycastTarget = true;
-            Util.NormalizeRectWithTopLeft(tipHit, 14f, 0f);
-            RowHoverForward forward = tipHit.gameObject.AddComponent<RowHoverForward>();
-            forward.item = item;
 
             Util.NormalizeRectWithTopLeft(item, 0f, 0f);
             return item;
@@ -1355,11 +1345,24 @@ item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f)
             }
         }
 
+        //the type tooltip only covers the icon and the name; the view/locate buttons stay on their own
+        //row-hover path, so moving from the name onto those buttons does not hide them
+        private const float TipAreaRight = 250f;
+
         public void OnPointerEnter(PointerEventData _eventData)
         {
             if (!disableUIAction)
             {
                 ShowRowButtons(true);
+                UpdateTooltip(_eventData);
+            }
+        }
+
+        public void OnPointerMove(PointerEventData _eventData)
+        {
+            if (!disableUIAction)
+            {
+                UpdateTooltip(_eventData);
             }
         }
 
@@ -1368,7 +1371,31 @@ item.nameText.rectTransform.anchoredPosition = new Vector2(8f + leftPadding, 0f)
             if (!disableUIAction)
             {
                 ShowRowButtons(false);
+                RowTip.Hide();
             }
+        }
+
+        private void UpdateTooltip(PointerEventData eventData)
+        {
+            if (!PLFN.showRowTooltip.Value)
+            {
+                RowTip.Hide();
+                return;
+            }
+            RectTransform rowRect = transform as RectTransform;
+            Canvas rowCanvas = rowRect != null ? rowRect.GetComponentInParent<Canvas>() : null;
+            Camera rowCamera = (rowCanvas != null && rowCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                ? rowCanvas.worldCamera
+                : null;
+            Vector2 local;
+            if (rowRect == null
+                || !RectTransformUtility.ScreenPointToLocalPointInRectangle(rowRect, eventData.position, rowCamera, out local)
+                || local.x < 0f || local.x > TipAreaRight)
+            {
+                RowTip.Hide();
+                return;
+            }
+            RowTip.Show(this, ObjectTypeText());
         }
 
         public void LockAppearance()

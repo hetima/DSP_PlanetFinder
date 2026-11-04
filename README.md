@@ -9,7 +9,7 @@ It can be opened from the button that will be added to the panel at the bottom l
 The scope of the list can be narrowed down by "all star system", "all planets", "current star system", "planets where facilities are being built", "favorited" and "recently visited planets". From there, you can further filter by planet name and which resources are present.  
 Resources can be multi-selected by shift-clicking, narrowing down the list of planets that have all the resources.
 
-The display area shows the name of the planet, distance from the current star system, and the actual number of selected resources and approximate number of chunks of veins. The power status can also be displayed and switched to resource information by pressing the Tab key. If the electricity supply-demand ratio exceeds 90%, an orange display warns.  
+The display area shows the name of the planet, distance from the current star system, and the actual number of selected resources and approximate number of chunks of veins. A planet icon is shown in front of the name. Hovering the icon or the name shows the planet or star type. For the selected resource the list can show how much has already been mined. A gas resource shows its extraction speed. The power status can also be displayed and switched to resource information by pressing the Tab key. If the electricity supply-demand ratio exceeds 90%, an orange display warns.  
 Clicking the magnifying glass button displays the planet in the starmap view.  
 Right-clicking a row brings up a panel offering various functions.
 
@@ -29,7 +29,7 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 一覧表示する範囲を「すべての星系」「すべての惑星」「現在の星系」「施設を建てている惑星」「お気に入り」「最近訪れた惑星」で絞り込みます。そこから更に惑星の名前や資源でフィルタできます。  
 資源はシフトクリックすると複数選択することができ、すべての資源が揃った惑星を絞り込みます。
 
-検索結果表示部分には惑星の名前、現在の星系からの距離、選択した資源の実数とおおまかな鉱脈の数が表示されます。電力の状態も表示でき、Tabキーを押すことで資源の情報と切り替わります。電力需給率が90%を超えていたらオレンジ色の表示で警告します。  
+検索結果表示部分には惑星の名前、現在の星系からの距離、選択した資源の実数とおおまかな鉱脈の数が表示されます。惑星名の前には惑星のアイコンが表示されます。アイコンまたは名前にカーソルを合わせると、惑星や恒星の種類が表示されます。選択した資源は、すでに採掘した量も表示できます。ガス資源は採取速度を表示します。電力の状態も表示でき、Tabキーを押すことで資源の情報と切り替わります。電力需給率が90%を超えていたらオレンジ色の表示で警告します。  
 虫眼鏡のボタンをクリックするとその惑星を星図ビューで表示します。  
 リストを右クリックすると様々な機能を提供するパネルを表示します。
 
@@ -41,14 +41,11 @@ Favorite feature adds/removes the "★" character directly to the planet name. M
 
 ## Release Notes
 
-### v1.3.1 (by TTenYX)
-- Show the mined/total vein count in the list: `[mined/total]` for vein groups and `(mined/total)` for vein cells; the mined part of the cell count is no longer always 0
-- Add `Count Reused Vein Groups`: a vein group covered by several miners can be counted once per miner, so the mined count can exceed the total (e.g. 8/7)
-- Add options to hide the vein cell count and the vein group count; the reuse option is disabled and dimmed while the group count is hidden
-- Show the extraction speed of a gas resource in the (A/B) column and the number of orbital collectors in the [A/B] column; a high-yield deuterium resource is highlighted in deep green
-- Show the planet icon in front of the planet name using the planet pictures the game already has; black holes and neutron stars keep the colour dot and get a thin halo
-- Add a tooltip when hovering a row icon or name that shows the star/planet type, sized to the text
-- Localize the display texts and the config window labels to Chinese/English following the game language
+### v1.3.2 (by TTenYX)
+- The type tooltip and the view / locate buttons no longer hide each other
+
+### v1.3.1
+- Show mined and total vein counts, gas extraction speed, planet icons and a type tooltip (by TTenYX) [details](https://github.com/hetima/DSP_PlanetFinder/pull/27)
 
 ### v1.3.0
 - Improve list rows, add always-on-top pin, support 0.10.35 (by TTenYX) [details](https://github.com/hetima/DSP_PlanetFinder/pull/26)
